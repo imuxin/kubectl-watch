@@ -1177,7 +1177,6 @@ name = "kubectl-watch"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bytelines",
  "clap 3.2.20",
  "edit",
  "either",
