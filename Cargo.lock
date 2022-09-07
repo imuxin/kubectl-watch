@@ -726,43 +726,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "git-delta-lib"
-version = "0.14.0"
-dependencies = [
- "ansi_colours",
- "ansi_term",
- "atty",
- "bat",
- "bitflags",
- "box_drawing",
- "bytelines",
- "chrono",
- "chrono-humanize",
- "clap 3.2.20",
- "console",
- "ctrlc",
- "dirs-next",
- "error-chain",
- "git2",
- "grep-cli",
- "itertools",
- "lazy_static",
- "palette",
- "pathdiff",
- "regex",
- "serde",
- "serde_json",
- "shell-words",
- "smol_str",
- "syntect",
- "sysinfo",
- "unicode-segmentation",
- "unicode-width",
- "vte",
- "xdg",
-]
-
-[[package]]
 name = "git-version"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -979,6 +942,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "imuxin-delta-lib"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0240df0a221cabefd75f569ceab2e8e2d7a9cf653597465f62482b95673e2ad5"
+dependencies = [
+ "ansi_colours",
+ "ansi_term",
+ "atty",
+ "bat",
+ "bitflags",
+ "box_drawing",
+ "bytelines",
+ "chrono",
+ "chrono-humanize",
+ "clap 3.2.20",
+ "console",
+ "ctrlc",
+ "dirs-next",
+ "error-chain",
+ "git2",
+ "grep-cli",
+ "itertools",
+ "lazy_static",
+ "palette",
+ "pathdiff",
+ "regex",
+ "serde",
+ "serde_json",
+ "shell-words",
+ "smol_str",
+ "syntect",
+ "sysinfo",
+ "unicode-segmentation",
+ "unicode-width",
+ "vte",
+ "xdg",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1181,8 +1183,8 @@ dependencies = [
  "edit",
  "either",
  "futures",
- "git-delta-lib",
  "grep-cli",
+ "imuxin-delta-lib",
  "k8s-openapi",
  "kube",
  "serde",
