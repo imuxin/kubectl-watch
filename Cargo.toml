@@ -2,12 +2,16 @@
 name = "kubectl-watch"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+authors = ["chengqinglin <chengqinglin@icloud.com>"]
+categories = ["development-tools", "visualization"]
+description = "another watch tool with visualization view of delta change for kubectl"
+homepage = "https://github.com/imuxin/kubectl-watch"
+repository = "https://github.com/imuxin/kubectl-watch"
+readme = "README.md"
 
 [dependencies]
 anyhow = "1.0.44"
-bytelines = "2.4.0"
 clap = { version = "3.1.9", default-features = false, features = ["std", "cargo", "derive"] }
 edit = "0.1.3"
 either = "1.6.1"
