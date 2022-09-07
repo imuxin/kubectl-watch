@@ -4,8 +4,8 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::Time,
     chrono::{Duration, Utc},
 };
-use kube::api::{Api, DynamicObject, ListParams, ResourceExt};
 use kube::{
+    api::{Api, DynamicObject, ListParams, ResourceExt},
     discovery::{ApiCapabilities, ApiResource, Discovery, Scope},
     runtime::{watcher, WatchStreamExt},
     Client,
