@@ -1,25 +1,32 @@
 # kubectl-watch
 another watch tool with visualization view of delta change for kubectl
 
+## Installation
+
+```bash
+cargo install kubectl-watch --locked
+```
+
+
 ## Usage
 
 watch deploy in all namespace
-```
+```bash
 kubectl-watch deployment -A
 ```
 
 watch deploy on some namespace
-```
+```bash
 kubectl-watch deployment -n {your-namespace}
 ```
 
 watch with delta view, just add `--delta` arg.
-```
+```bash
 kubectl-watch deployment -n {your-namespace} --delta
 ```
 
 run `kubectl-watch -h` to get help msg.
-```
+```bash
 kubectl-watch
 
 USAGE:
