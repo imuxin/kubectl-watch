@@ -1,3 +1,4 @@
+use colored::*;
 use delta_lib::cli;
 use delta_lib::config;
 use delta_lib::env;
@@ -5,6 +6,8 @@ use delta_lib::git_config;
 use delta_lib::subcommands;
 use delta_lib::utils;
 use kube::api::DynamicObject;
+// use kube::Resource;
+use kube::ResourceExt;
 use std::env::temp_dir;
 use std::fs;
 use std::path::PathBuf;
@@ -14,10 +17,48 @@ pub fn diff(v: &Vec<DynamicObject>) -> std::io::Result<i32> {
         return Ok(0);
     }
 
-    let (minus_file, plus_file) = store_to_file(v);
+    paint_header_line(v.last().unwrap());
+
     // init delta args
+    let (minus_file, plus_file) = store_to_file(v);
+
     let exit_code = diff_files(minus_file, plus_file)?;
     return Ok(exit_code);
+}
+
+fn paint_header_line(obj: &DynamicObject) {
+    let api_version = &obj.types.as_ref().unwrap().api_version;
+    let kind = &obj.types.as_ref().unwrap().kind;
+    let namespace = &obj.namespace().unwrap();
+    let name = &obj.name_any();
+    let header_line = format!(
+        "{} {} {} {} {} {} {} {}",
+        "Apiversion", &api_version, "Kind:", kind, "Namespace:", namespace, "Name:", name,
+    );
+    let header_line_with_color = format!(
+        "{} {} {} {} {} {} {} {}",
+        "Apiversion",
+        api_version.bright_yellow(),
+        "Kind:",
+        kind.bright_yellow(),
+        "Namespace:",
+        namespace.bright_yellow(),
+        "Name:",
+        name.bright_yellow(),
+    );
+
+    let count = header_line.chars().count();
+    println!(
+        "{}{}",
+        "─".repeat(count + 1).bright_blue(),
+        "┐".bright_blue()
+    );
+    println!("{} {}", &header_line_with_color, "│".bright_blue());
+    println!(
+        "{}{}",
+        "─".repeat(count + 1).bright_blue(),
+        "┘".bright_blue()
+    );
 }
 
 fn store_to_file(v: &Vec<DynamicObject>) -> (PathBuf, PathBuf) {
