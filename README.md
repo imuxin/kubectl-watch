@@ -1,6 +1,8 @@
 # kubectl-watch
 another watch tool with visualization view of delta change for kubectl
 
+![overview.png](./assets/overview.png)
+
 ## Installation
 
 ### cargo install
