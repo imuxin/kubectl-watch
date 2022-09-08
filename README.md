@@ -3,10 +3,20 @@ another watch tool with visualization view of delta change for kubectl
 
 ## Installation
 
+### cargo install
+
 ```bash
 cargo install kubectl-watch --locked
 ```
 
+### docker image
+
+1. Docker should be preinstalled, more installation details please visit [official website](https://docs.docker.com/engine/install/).
+
+2. copy the kubectl-watch script into your $PATH folder
+```bash
+cp script/kubectl-watch /usr/local/bin/
+```
 
 ## Usage
 
@@ -57,4 +67,5 @@ git submodule update --init --recursive
 ## Thanks
 
 - [delta](https://github.com/dandavison/delta)
+- [kube-rs](https://github.com/kube-rs/kube-rs)
 - [rust](https://github.com/rust-lang/rust)

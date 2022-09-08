@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+CMD=docker
+IMG="ghcr.io/imuxin/kubectl-watch:latest"
+KUBECONF="$HOME/.kube/config"
+MOUNTKUBECONF="/root/.kube/config"
+
+function cmd_exists() {
+	if ! command -v $1 &> /dev/null
+	then
+		return 1
+	fi
+	return 0
+}
+
+
+function main() {
+	if ! cmd_exists $CMD
+	then
+		echo "not found: docker, please install docker."
+		exit -1
+	fi
+	$CMD run -ti --init --rm -v $KUBECONF:$MOUNTKUBECONF $IMG $@
+}
+
+main
+
