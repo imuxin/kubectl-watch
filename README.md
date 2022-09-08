@@ -18,6 +18,7 @@ cargo install kubectl-watch --locked
 2. copy the kubectl-watch script into your $PATH folder
 ```bash
 cp script/kubectl-watch /usr/local/bin/
+chmod +x /usr/local/bin/kubectl-watch
 ```
 
 ## Usage
