@@ -1,10 +1,5 @@
 use colored::*;
-use delta_lib::cli;
-use delta_lib::config;
-use delta_lib::env;
-use delta_lib::git_config;
-use delta_lib::subcommands;
-use delta_lib::utils;
+use delta_lib::{cli, config, env, git_config, subcommands, utils};
 use kube::api::DynamicObject;
 // use kube::Resource;
 use kube::ResourceExt;

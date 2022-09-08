@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use core::panic;
 use futures::{StreamExt, TryStreamExt};
 use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::Time,
@@ -8,9 +9,10 @@ use kube::{
     api::{Api, DynamicObject, ListParams, ResourceExt},
     discovery::{ApiCapabilities, ApiResource, Discovery, Scope},
     runtime::{watcher, WatchStreamExt},
-    Client,
+    Client, Config, Error,
 };
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 mod diff;
@@ -32,6 +34,10 @@ struct App {
     /// Show delta changes view
     #[clap(long, short)]
     delta: bool,
+
+    /// Skip tls check
+    #[clap(long)]
+    skip_tls: bool,
 
     resource: Option<String>,
     name: Option<String>,
@@ -97,7 +103,19 @@ fn dynamic_api(
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
     let app: App = clap::Parser::parse();
-    let client = Client::try_default().await?;
+
+    // init kube client
+    let mut config = Config::infer().await.map_err(Error::InferConfig)?;
+    if app.skip_tls {
+        config.accept_invalid_certs = true;
+    }
+
+    let client = match Client::try_from(config) {
+        Ok(cli) => cli,
+        Err(error) => {
+            panic!("failed to init kube client: {:?}", error)
+        }
+    };
 
     // discovery (to be able to infer apis from kind/plural only)
     let discovery = Discovery::new(client.clone()).run().await?;
@@ -167,10 +185,3 @@ fn format_duration(dur: Duration) -> String {
         (_, _, mins) => format!("{}m", mins),
     }
 }
-
-// fn main() -> std::io::Result<()> {
-//     let minus_file = PathBuf::from(r"/home/muxin/draft/minus_str");
-//     let plus_file = PathBuf::from(r"/home/muxin/draft/plus_str");
-//     let exit_code = diff::diff_files(minus_file, plus_file)?;
-//     process::exit(exit_code);
-// }

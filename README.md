@@ -56,15 +56,7 @@ OPTIONS:
     -l, --selector <SELECTOR>      Selector (label query) to filter on, supports '=', '==', and
                                    '!='.(e.g. -l key1=value1,key2=value2)
     -n, --namespace <NAMESPACE>    If present, the namespace scope for this CLI request
-```
-
-
-## Develop
-
-clone the project
-```
-git clone --recurse-submodules -j8 git@github.com:imuxin/kubectl-diff.git
-git submodule update --init --recursive
+        --skip-tls                 Skip tls check
 ```
 
 ## Thanks
