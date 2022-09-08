@@ -1,5 +1,5 @@
 # kubectl-watch
-another watch tool with visualization view of delta change for kubectl
+Another watch tool with visualization view of delta change for kubernetes resources.
 
 ![overview.png](./assets/overview.png)
 
