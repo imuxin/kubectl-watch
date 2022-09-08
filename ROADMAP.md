@@ -5,6 +5,6 @@
 - [x] support --skip-tls
 - [ ] support nerdctl as container starter
 - [x] print resource info instead of file path
-- [ ] fix missing apiversion and kind of first watched object
+- [ ] fix missing apiversion and kind in the first watched object
 - [ ] add unittest
 - [ ] add pull request ci
