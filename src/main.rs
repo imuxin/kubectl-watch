@@ -16,6 +16,7 @@ use std::convert::TryFrom;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 mod diff;
+mod kube2;
 
 #[derive(clap::Parser)]
 struct App {
@@ -60,7 +61,7 @@ impl App {
 }
 
 fn resolve_api_resource(
-    discovery: &Discovery,
+    discovery: &kube2::Discovery,
     name: &str,
 ) -> Option<(ApiResource, ApiCapabilities)> {
     // iterate through groups to find matching kind/plural names at recommended versions
@@ -68,15 +69,8 @@ fn resolve_api_resource(
     // this is equivalent to kubectl's api group preference
     discovery
         .groups()
-        .flat_map(|group| {
-            group
-                .recommended_resources()
-                .into_iter()
-                .map(move |res| (group, res))
-        })
+        .flat_map(|group| group.resources().into_iter().map(move |res| (group, res)))
         .filter(|(_, (res, _))| {
-            // match on both resource name and kind name
-            // ideally we should allow shortname matches as well
             name.eq_ignore_ascii_case(&res.kind) || name.eq_ignore_ascii_case(&res.plural)
         })
         .min_by_key(|(group, _res)| group.name())
@@ -119,10 +113,12 @@ async fn main() -> Result<()> {
 
     // discovery (to be able to infer apis from kind/plural only)
     let discovery = Discovery::new(client.clone()).run().await?;
+    // discovery2 will return all resources
+    let discovery2: kube2::Discovery = unsafe { std::mem::transmute(discovery) };
 
     if let Some(resource) = &app.resource {
         // Common discovery, parameters, and api configuration for a single resource
-        let (ar, caps) = resolve_api_resource(&discovery, resource)
+        let (ar, caps) = resolve_api_resource(&discovery2, resource)
             .with_context(|| format!("resource {:?} not found in cluster", resource))?;
         let mut lp = ListParams::default();
         if let Some(label) = &app.selector {
