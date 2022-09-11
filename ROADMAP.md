@@ -7,5 +7,6 @@
 - [ ] support exporter
 - [x] print resource info instead of file path
 - [ ] fix missing apiversion and kind in the first watched object
+- [x] fix some resources can not be found in cluster
 - [ ] add unittest
 - [ ] add pull request ci
