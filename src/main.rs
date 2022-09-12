@@ -36,6 +36,10 @@ struct App {
     #[clap(long, short)]
     delta: bool,
 
+    /// Diff tool for process delta changes
+    #[clap(long, arg_enum, default_value_t)]
+    diff_tool: diff::DiffTool,
+
     /// Skip tls check
     #[clap(long)]
     skip_tls: bool,
@@ -132,8 +136,9 @@ async fn main() -> Result<()> {
         tracing::info!(?resource, name = ?app.name.clone().unwrap_or_default(), "requested objects");
 
         let (tx, rx): (Sender<DynamicObject>, Receiver<DynamicObject>) = channel(32);
+        let diff_tool = app.diff_tool.clone();
         if app.delta {
-            tokio::spawn(async move { delta_print_process(rx).await });
+            tokio::spawn(async move { delta_print_process(rx, diff_tool).await });
         } else {
             tokio::spawn(async move { simple_print_process(rx).await });
         }
@@ -152,7 +157,10 @@ async fn simple_print_process(mut rx: Receiver<DynamicObject>) -> std::io::Resul
     Ok(())
 }
 
-async fn delta_print_process(mut rx: Receiver<DynamicObject>) -> std::io::Result<()> {
+async fn delta_print_process(
+    mut rx: Receiver<DynamicObject>,
+    diff_tool: diff::DiffTool,
+) -> std::io::Result<()> {
     let mut map = HashMap::new();
     while let Some(inst) = rx.recv().await {
         let v: Vec<DynamicObject> = Vec::new();
@@ -162,7 +170,7 @@ async fn delta_print_process(mut rx: Receiver<DynamicObject>) -> std::io::Result
         map.entry(key.clone()).or_insert(v);
         if let Some(obj_arr) = map.get_mut(&key.clone()) {
             obj_arr.push(inst);
-            let exit_code = diff::diff(obj_arr)?;
+            let exit_code = diff::diff(obj_arr, &diff_tool)?;
             if exit_code != 0 && exit_code != 1 {
                 std::process::exit(exit_code);
             }

@@ -1,6 +1,6 @@
 # Kubectl-watch Roadmap [0.2]
 
-- [ ] support [difftastic](https://github.com/Wilfred/difftastic/) diff printer
+- [x] support [difftastic](https://github.com/Wilfred/difftastic/) diff printer
 - [ ] support resource shortName
 - [x] support --skip-tls
 - [ ] support nerdctl as container starter

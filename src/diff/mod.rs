@@ -1,13 +1,36 @@
+mod delta;
+mod difft;
+
 use colored::*;
-use delta_lib::{cli, config, env, git_config, subcommands, utils};
 use kube::api::DynamicObject;
-// use kube::Resource;
 use kube::ResourceExt;
 use std::env::temp_dir;
 use std::fs;
 use std::path::PathBuf;
 
-pub fn diff(v: &Vec<DynamicObject>) -> std::io::Result<i32> {
+#[derive(clap::ArgEnum, Clone, PartialEq, Eq)]
+pub enum DiffTool {
+    Delta,
+    Difft,
+}
+impl Default for DiffTool {
+    fn default() -> Self {
+        Self::Delta
+    }
+}
+
+pub trait Diff {
+    fn diff(&mut self, minus_file: PathBuf, plus_file: PathBuf) -> std::io::Result<i32>;
+}
+
+fn new(diff_tool: &DiffTool) -> Box<dyn Diff> {
+    match diff_tool {
+        DiffTool::Delta => Box::new(delta::Delta::new()),
+        DiffTool::Difft => Box::new(difft::Difft::new()),
+    }
+}
+
+pub fn diff(v: &Vec<DynamicObject>, diff_tool: &DiffTool) -> std::io::Result<i32> {
     if v.len() < 2 {
         return Ok(0);
     }
@@ -17,8 +40,7 @@ pub fn diff(v: &Vec<DynamicObject>) -> std::io::Result<i32> {
     // init delta args
     let (minus_file, plus_file) = store_to_file(v);
 
-    let exit_code = diff_files(minus_file, plus_file)?;
-    return Ok(exit_code);
+    new(diff_tool).diff(minus_file, plus_file)
 }
 
 fn paint_header_line(obj: &DynamicObject) {
@@ -67,9 +89,9 @@ fn store_to_file(v: &Vec<DynamicObject>) -> (PathBuf, PathBuf) {
     path.push("kubectl-watch");
     fs::create_dir_all(&path).unwrap();
     let mut minus_file = path.clone();
-    minus_file.push("minus");
+    minus_file.push("minus.yaml");
     let mut plus_file = path.clone();
-    plus_file.push("plus");
+    plus_file.push("plus.yaml");
 
     std::fs::write(&minus_file, minus_yaml).unwrap();
     std::fs::write(&plus_file, plus_yaml).unwrap();
@@ -77,32 +99,4 @@ fn store_to_file(v: &Vec<DynamicObject>) -> (PathBuf, PathBuf) {
     let minus_file = PathBuf::from(&minus_file);
     let plus_file = PathBuf::from(&plus_file);
     return (minus_file, plus_file);
-}
-
-pub fn diff_files(minus_file: PathBuf, plus_file: PathBuf) -> std::io::Result<i32> {
-    utils::process::start_determining_calling_process_in_thread();
-    // init delta args
-    let assets = utils::bat::assets::load_highlighting_assets();
-    let env = env::DeltaEnv::init();
-    let mut opt =
-        cli::Opt::from_git_config(env.clone(), git_config::GitConfig::try_create(&env), assets);
-    opt.computed.paging_mode = utils::bat::output::PagingMode::Never;
-    opt.side_by_side = true;
-    let config = config::Config::from(opt);
-
-    let mut output_type = utils::bat::output::OutputType::from_mode(
-        &env,
-        config.paging_mode,
-        config.pager.clone(),
-        &config,
-    )
-    .unwrap();
-    let writer = output_type.handle().unwrap();
-    let exit_code = subcommands::diff::diff(&minus_file, &plus_file, &config, writer);
-    return Ok(exit_code);
-
-    // Note(ql): show delta config
-    // let stdout = std::io::stdout();
-    // let mut stdout = stdout.lock();
-    // subcommands::show_config::show_config(&config, &mut stdout)?;
 }
