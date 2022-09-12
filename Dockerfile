@@ -2,7 +2,7 @@ FROM slic/rust:alpine-edge as build
 COPY . /kubectl-watch
 WORKDIR /kubectl-watch
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-RUN apk add --no-cache musl-dev
+RUN apk add --no-cache musl-dev g++
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
 FROM alpine:edge
