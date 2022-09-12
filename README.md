@@ -1,7 +1,10 @@
 # kubectl-watch
 Another watch tool with visualization view of delta change for kubernetes resources.
 
-![overview.png](./assets/overview.png)
+overview of using delta diff tool                   | overview of using difftastic diff tool
+:--------------------------------------------------:|:--------------------------------------------------:
+![overview-delta.png](./assets/overview-delta.png)  |  ![overview-difft.png](./assets/overview-difft.png)
+
 
 ## Installation
 
@@ -27,17 +30,22 @@ chmod +x /usr/local/bin/kubectl-watch
 
 watch deploy in all namespace
 ```bash
-kubectl-watch deployment -A
+kubectl-watch {resource-name} -A
 ```
 
 watch deploy on some namespace
 ```bash
-kubectl-watch deployment -n {your-namespace}
+kubectl-watch {resource-name} -n {namespace}
 ```
 
 watch with delta view, just add `--delta` arg.
 ```bash
-kubectl-watch deployment -n {your-namespace} --delta
+kubectl-watch {resource-name} -n {namespace} --delta
+```
+
+watch with delta view by using `difftastic` tool, just add `--diff-tool difft`
+```
+kubectl watch {resource-name} -n {namespace} --delta --diff-tool difft
 ```
 
 run `kubectl-watch -h` to get help msg.
@@ -54,9 +62,9 @@ ARGS:
 OPTIONS:
     -A, --all                      If present, list the requested object(s) across all namespaces
     -d, --delta                    Show delta changes view
+        --diff-tool <DIFF_TOOL>    Diff tool for process delta changes [default: delta] [possible values: delta, difft]
     -h, --help                     Print help information
-    -l, --selector <SELECTOR>      Selector (label query) to filter on, supports '=', '==', and
-                                   '!='.(e.g. -l key1=value1,key2=value2)
+    -l, --selector <SELECTOR>      Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)
     -n, --namespace <NAMESPACE>    If present, the namespace scope for this CLI request
         --skip-tls                 Skip tls check
 ```
