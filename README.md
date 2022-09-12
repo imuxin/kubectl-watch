@@ -72,5 +72,6 @@ OPTIONS:
 ## Thanks
 
 - [delta](https://github.com/dandavison/delta)
+- [difftastic](https://github.com/Wilfred/difftastic)
 - [kube-rs](https://github.com/kube-rs/kube-rs)
 - [rust](https://github.com/rust-lang/rust)
