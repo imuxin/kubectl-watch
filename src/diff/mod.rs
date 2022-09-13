@@ -1,5 +1,6 @@
 mod delta;
 mod difft;
+mod utils;
 
 use colored::*;
 use kube::api::DynamicObject;
@@ -35,7 +36,7 @@ pub fn diff(v: &Vec<DynamicObject>, diff_tool: &DiffTool) -> std::io::Result<i32
         return Ok(0);
     }
 
-    paint_header_line(v.last().unwrap());
+    paint_header_line(v);
 
     // init delta args
     let (minus_file, plus_file) = store_to_file(v);
@@ -43,17 +44,15 @@ pub fn diff(v: &Vec<DynamicObject>, diff_tool: &DiffTool) -> std::io::Result<i32
     new(diff_tool).diff(minus_file, plus_file)
 }
 
-fn paint_header_line(obj: &DynamicObject) {
+fn paint_header_line(v: &Vec<DynamicObject>) {
+    let obj = v.last().unwrap();
     let api_version = &obj.types.as_ref().unwrap().api_version;
     let kind = &obj.types.as_ref().unwrap().kind;
     let namespace = &obj.namespace().unwrap();
     let name = &obj.name_any();
-    let header_line = format!(
-        "{} {} {} {} {} {} {} {}",
-        "Apiversion", &api_version, "Kind:", kind, "Namespace:", namespace, "Name:", name,
-    );
+
     let header_line_with_color = format!(
-        "{} {} {} {} {} {} {} {}",
+        "{} {} {} {} {} {} {} {} --- Event Number: {}",
         "Apiversion",
         api_version.bright_yellow(),
         "Kind:",
@@ -62,20 +61,17 @@ fn paint_header_line(obj: &DynamicObject) {
         namespace.bright_yellow(),
         "Name:",
         name.bright_yellow(),
+        (v.len() - 1).to_string().bright_yellow(),
     );
 
-    let count = header_line.chars().count();
-    println!(
-        "{}{}",
-        "─".repeat(count + 1).bright_blue(),
-        "┐".bright_blue()
-    );
-    println!("{} {}", &header_line_with_color, "│".bright_blue());
-    println!(
-        "{}{}",
-        "─".repeat(count + 1).bright_blue(),
-        "┘".bright_blue()
-    );
+    let seperator_line = "─".repeat(utils::detect_display_width());
+
+    if v.len() > 2 {
+        println!("{}", "\n".repeat(5));
+    }
+    println!("{}", seperator_line.bright_blue());
+    println!("{}", &header_line_with_color);
+    println!("{}", seperator_line.bright_blue());
 }
 
 fn store_to_file(v: &Vec<DynamicObject>) -> (PathBuf, PathBuf) {

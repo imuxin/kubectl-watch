@@ -1368,6 +1368,8 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml 0.9.11",
+ "term_size",
+ "terminal_size 0.2.1",
  "tokio",
  "tracing",
  "tracing-subscriber",
