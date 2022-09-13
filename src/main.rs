@@ -32,17 +32,17 @@ struct App {
     #[clap(long, short = 'A')]
     all: bool,
 
-    /// Show delta changes view
+    /// Skip show delta changes view
     #[clap(long, short)]
-    delta: bool,
+    skip_delta: bool,
 
-    /// Diff tool for process delta changes
+    /// Diff tool to analyze delta changes
     #[clap(long, arg_enum, default_value_t)]
     diff_tool: diff::DiffTool,
 
-    /// Skip tls check
+    /// Use tls to request api-server
     #[clap(long)]
-    skip_tls: bool,
+    use_tls: bool,
 
     resource: Option<String>,
     name: Option<String>,
@@ -104,7 +104,7 @@ async fn main() -> Result<()> {
 
     // init kube client
     let mut config = Config::infer().await.map_err(Error::InferConfig)?;
-    if app.skip_tls {
+    if !app.use_tls {
         config.accept_invalid_certs = true;
     }
 
@@ -137,7 +137,7 @@ async fn main() -> Result<()> {
 
         let (tx, rx): (Sender<DynamicObject>, Receiver<DynamicObject>) = channel(32);
         let diff_tool = app.diff_tool.clone();
-        if app.delta {
+        if !app.skip_delta {
             tokio::spawn(async move { delta_print_process(rx, diff_tool).await });
         } else {
             tokio::spawn(async move { simple_print_process(rx).await });

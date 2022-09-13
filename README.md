@@ -38,14 +38,14 @@ watch deploy on some namespace
 kubectl-watch {resource-name} -n {namespace}
 ```
 
-watch with delta view, just add `--delta` arg.
+watch without delta view, just add `--skip-delta` arg.
 ```bash
 kubectl-watch {resource-name} -n {namespace} --delta
 ```
 
 watch with delta view by using `difftastic` tool, just add `--diff-tool difft`
 ```
-kubectl watch {resource-name} -n {namespace} --delta --diff-tool difft
+kubectl watch {resource-name} -n {namespace} --diff-tool difft
 ```
 
 run `kubectl-watch -h` to get help msg.
@@ -61,12 +61,12 @@ ARGS:
 
 OPTIONS:
     -A, --all                      If present, list the requested object(s) across all namespaces
-    -d, --delta                    Show delta changes view
-        --diff-tool <DIFF_TOOL>    Diff tool for process delta changes [default: delta] [possible values: delta, difft]
+        --diff-tool <DIFF_TOOL>    Diff tool to analyze delta changes [default: delta] [possible values: delta, difft]
     -h, --help                     Print help information
     -l, --selector <SELECTOR>      Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)
     -n, --namespace <NAMESPACE>    If present, the namespace scope for this CLI request
-        --skip-tls                 Skip tls check
+    -s, --skip-delta               Skip show delta changes view
+        --use-tls                  Use tls to request api-server
 ```
 
 ## Thanks
