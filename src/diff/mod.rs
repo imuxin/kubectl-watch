@@ -1,4 +1,3 @@
-mod abs;
 mod delta;
 mod difft;
 mod file;
@@ -6,6 +5,7 @@ mod pipeline;
 mod utils;
 
 use self::pipeline::Process;
+use crate::kube::dynamic_object;
 use crate::options;
 use colored::*;
 use kube::api::DynamicObject;
@@ -47,8 +47,8 @@ pub fn diff(app: &options::App, v: &Vec<DynamicObject>) -> std::io::Result<i32> 
         p.add_task(pipeline::exclude_managed_fields);
     }
 
-    let mut l = abs::DynamicObject::from(&v[v.len() - 2]);
-    let mut r = abs::DynamicObject::from(v.last().unwrap());
+    let mut l = dynamic_object::DynamicObject::from(&v[v.len() - 2]);
+    let mut r = dynamic_object::DynamicObject::from(v.last().unwrap());
 
     p.process(&mut l, &mut r);
 
@@ -58,8 +58,8 @@ pub fn diff(app: &options::App, v: &Vec<DynamicObject>) -> std::io::Result<i32> 
     new(&app.diff_tool).diff(minus_file, plus_file)
 }
 
-fn paint_header_line(v: &Vec<DynamicObject>) {
-    let obj = v.last().unwrap();
+fn paint_header_line(list: &Vec<DynamicObject>) {
+    let obj = list.last().unwrap();
     let api_version = &obj.types.as_ref().unwrap().api_version;
     let kind = &obj.types.as_ref().unwrap().kind;
     let namespace = &obj.namespace().unwrap();
@@ -75,12 +75,12 @@ fn paint_header_line(v: &Vec<DynamicObject>) {
         namespace.bright_yellow(),
         "Name:",
         name.bright_yellow(),
-        (v.len() - 1).to_string().bright_yellow(),
+        (list.len() - 1).to_string().bright_yellow(),
     );
 
     let seperator_line = "─".repeat(utils::detect_display_width());
 
-    if v.len() > 2 {
+    if list.len() > 2 {
         println!("{}", "\n".repeat(5));
     }
     println!("{}", seperator_line.bright_blue());

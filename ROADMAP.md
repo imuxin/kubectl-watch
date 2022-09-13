@@ -3,7 +3,6 @@
 - [x] support [difftastic](https://github.com/Wilfred/difftastic/) diff printer
 - [ ] support resource shortName
 - [x] support --skip-tls
-- [ ] support nerdctl as container starter
 - [ ] support exporter
 - [x] print resource info instead of file path
 - [x] fix missing apiversion and kind in the first watched object

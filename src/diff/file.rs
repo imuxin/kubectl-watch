@@ -1,9 +1,9 @@
-use crate::diff::abs;
+use crate::kube::dynamic_object;
 use std::env::temp_dir;
 use std::fs;
 use std::path::PathBuf;
 
-pub fn store_to_file(l: &abs::DynamicObject, r: &abs::DynamicObject) -> (PathBuf, PathBuf) {
+pub fn store_to_file(l: &dynamic_object::DynamicObject, r: &dynamic_object::DynamicObject) -> (PathBuf, PathBuf) {
     let l_yaml = serde_yaml::to_string(l).unwrap();
     let r_yaml = serde_yaml::to_string(r).unwrap();
 
