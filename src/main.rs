@@ -17,51 +17,15 @@ use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 mod diff;
 mod kube2;
+mod options;
 
-#[derive(clap::Parser)]
-struct App {
-    /// Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)
-    #[clap(long, short = 'l')]
-    selector: Option<String>,
-
-    /// If present, the namespace scope for this CLI request
-    #[clap(long, short)]
-    namespace: Option<String>,
-
-    /// If present, list the requested object(s) across all namespaces
-    #[clap(long, short = 'A')]
-    all: bool,
-
-    /// Skip show delta changes view
-    #[clap(long, short)]
-    skip_delta: bool,
-
-    /// Diff tool to analyze delta changes
-    #[clap(long, arg_enum, default_value_t)]
-    diff_tool: diff::DiffTool,
-
-    /// Use tls to request api-server
-    #[clap(long)]
-    use_tls: bool,
-
-    resource: Option<String>,
-    name: Option<String>,
-}
-
-impl App {
-    async fn watch(
-        &self,
-        api: Api<DynamicObject>,
-        lp: ListParams,
-        tx: Sender<DynamicObject>,
-    ) -> Result<()> {
-        // present a dumb table for it for now. kubectl does not do this anymore.
-        let mut stream = watcher(api, lp).applied_objects().boxed();
-        while let Some(inst) = stream.try_next().await? {
-            tx.send(inst).await.unwrap();
-        }
-        Ok(())
+async fn watch(api: Api<DynamicObject>, lp: ListParams, tx: Sender<DynamicObject>) -> Result<()> {
+    // present a dumb table for it for now. kubectl does not do this anymore.
+    let mut stream = watcher(api, lp).applied_objects().boxed();
+    while let Some(inst) = stream.try_next().await? {
+        tx.send(inst).await.unwrap();
     }
+    Ok(())
 }
 
 fn resolve_api_resource(
@@ -100,7 +64,7 @@ fn dynamic_api(
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
-    let app: App = clap::Parser::parse();
+    let app: options::App = clap::Parser::parse();
 
     // init kube client
     let mut config = Config::infer().await.map_err(Error::InferConfig)?;
@@ -136,14 +100,14 @@ async fn main() -> Result<()> {
         tracing::info!(?resource, name = ?app.name.clone().unwrap_or_default(), "requested objects");
 
         let (tx, rx): (Sender<DynamicObject>, Receiver<DynamicObject>) = channel(32);
-        let diff_tool = app.diff_tool.clone();
+
         if !app.skip_delta {
-            tokio::spawn(async move { delta_print_process(rx, diff_tool).await });
+            tokio::spawn(async move { delta_print_process(&app, rx).await });
         } else {
             tokio::spawn(async move { simple_print_process(rx).await });
         }
 
-        app.watch(api, lp, tx).await?;
+        watch(api, lp, tx).await?;
     }
     Ok(())
 }
@@ -158,8 +122,8 @@ async fn simple_print_process(mut rx: Receiver<DynamicObject>) -> std::io::Resul
 }
 
 async fn delta_print_process(
+    app: &options::App,
     mut rx: Receiver<DynamicObject>,
-    diff_tool: diff::DiffTool,
 ) -> std::io::Result<()> {
     let mut map = HashMap::new();
     while let Some(inst) = rx.recv().await {
@@ -170,7 +134,7 @@ async fn delta_print_process(
         map.entry(key.clone()).or_insert(v);
         if let Some(obj_arr) = map.get_mut(&key.clone()) {
             obj_arr.push(inst);
-            let exit_code = diff::diff(obj_arr, &diff_tool)?;
+            let exit_code = diff::diff(app, obj_arr)?;
             if exit_code != 0 && exit_code != 1 {
                 std::process::exit(exit_code);
             }

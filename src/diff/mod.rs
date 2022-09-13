@@ -1,12 +1,15 @@
+mod abs;
 mod delta;
 mod difft;
+mod file;
+mod pipeline;
 mod utils;
 
+use self::pipeline::Process;
+use crate::options;
 use colored::*;
 use kube::api::DynamicObject;
 use kube::ResourceExt;
-use std::env::temp_dir;
-use std::fs;
 use std::path::PathBuf;
 
 #[derive(clap::ArgEnum, Clone, PartialEq, Eq)]
@@ -31,17 +34,28 @@ fn new(diff_tool: &DiffTool) -> Box<dyn Diff> {
     }
 }
 
-pub fn diff(v: &Vec<DynamicObject>, diff_tool: &DiffTool) -> std::io::Result<i32> {
+pub fn diff(app: &options::App, v: &Vec<DynamicObject>) -> std::io::Result<i32> {
     if v.len() < 2 {
         return Ok(0);
     }
 
     paint_header_line(v);
 
-    // init delta args
-    let (minus_file, plus_file) = store_to_file(v);
+    let mut p = pipeline::Pipeline::init();
 
-    new(diff_tool).diff(minus_file, plus_file)
+    if !app.include_managed_fields {
+        p.add_task(pipeline::exclude_managed_fields);
+    }
+
+    let mut l = abs::DynamicObject::from(&v[v.len() - 2]);
+    let mut r = abs::DynamicObject::from(v.last().unwrap());
+
+    p.process(&mut l, &mut r);
+
+    // init delta args
+    let (minus_file, plus_file) = file::store_to_file(&l, &r);
+
+    new(&app.diff_tool).diff(minus_file, plus_file)
 }
 
 fn paint_header_line(v: &Vec<DynamicObject>) {
@@ -72,27 +86,4 @@ fn paint_header_line(v: &Vec<DynamicObject>) {
     println!("{}", seperator_line.bright_blue());
     println!("{}", &header_line_with_color);
     println!("{}", seperator_line.bright_blue());
-}
-
-fn store_to_file(v: &Vec<DynamicObject>) -> (PathBuf, PathBuf) {
-    let obj_last = v.last().unwrap();
-    let obj_penultimate = &v[v.len() - 2];
-
-    let plus_yaml = serde_yaml::to_string(obj_last).unwrap();
-    let minus_yaml = serde_yaml::to_string(obj_penultimate).unwrap();
-
-    let mut path = temp_dir();
-    path.push("kubectl-watch");
-    fs::create_dir_all(&path).unwrap();
-    let mut minus_file = path.clone();
-    minus_file.push("minus.yaml");
-    let mut plus_file = path.clone();
-    plus_file.push("plus.yaml");
-
-    std::fs::write(&minus_file, minus_yaml).unwrap();
-    std::fs::write(&plus_file, plus_yaml).unwrap();
-
-    let minus_file = PathBuf::from(&minus_file);
-    let plus_file = PathBuf::from(&plus_file);
-    return (minus_file, plus_file);
 }
