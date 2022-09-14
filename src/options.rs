@@ -30,6 +30,10 @@ pub struct App {
     #[clap(long)]
     pub include_managed_fields: bool,
 
+    /// A path, where all watched resources will be strored
+    #[clap(long)]
+    pub export: Option<String>,
+
     pub resource: Option<String>,
     pub name: Option<String>,
 }

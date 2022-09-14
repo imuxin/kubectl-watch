@@ -1,12 +1,13 @@
 mod delta;
 mod difft;
-mod file;
 mod pipeline;
 mod utils;
 
 use self::pipeline::Process;
 use crate::kube::dynamic_object;
 use crate::options;
+use crate::persistent;
+
 use colored::*;
 use kube::api::DynamicObject;
 use kube::ResourceExt;
@@ -53,7 +54,7 @@ pub fn diff(app: &options::App, v: &Vec<DynamicObject>) -> std::io::Result<i32> 
     p.process(&mut l, &mut r);
 
     // init delta args
-    let (minus_file, plus_file) = file::store_to_file(&l, &r);
+    let (minus_file, plus_file) = persistent::tmp_store(&l, &r);
 
     new(&app.diff_tool).diff(minus_file, plus_file)
 }

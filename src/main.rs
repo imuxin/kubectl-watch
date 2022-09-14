@@ -3,6 +3,7 @@ use anyhow::Result;
 mod diff;
 mod kube;
 mod options;
+mod persistent;
 
 #[tokio::main]
 async fn main() -> Result<()> {

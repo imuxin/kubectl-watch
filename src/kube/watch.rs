@@ -1,6 +1,8 @@
 use crate::diff;
 use crate::kube::{client, discovery};
 use crate::options;
+use crate::persistent;
+
 use anyhow::{Context, Result};
 use futures::{StreamExt, TryStreamExt};
 use k8s_openapi::{
@@ -40,7 +42,9 @@ pub async fn watch(app: options::App) -> Result<()> {
         tracing::info!(?resource, name = ?app.name.clone().unwrap_or_default(), "requested objects");
 
         let (tx, rx): (Sender<DynamicObject>, Receiver<DynamicObject>) = channel(32);
-    
+
+        let export_path = app.export.clone();
+
         if !app.skip_delta {
             tokio::spawn(async move { delta_print_process(&app, rx).await });
         } else {
@@ -50,6 +54,7 @@ pub async fn watch(app: options::App) -> Result<()> {
         // present a dumb table for it for now. kubectl does not do this anymore.
         let mut stream = watcher(api, lp).applied_objects().boxed();
         while let Some(obj) = stream.try_next().await? {
+            persistent::store_resource(&export_path, &obj);
             tx.send(obj).await.unwrap();
         }
     }
