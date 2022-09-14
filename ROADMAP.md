@@ -1,7 +1,7 @@
 # Kubectl-watch Roadmap [0.2]
 
 - [x] support [difftastic](https://github.com/Wilfred/difftastic/) diff printer
-- [ ] support resource shortName
+- [x] support resource shortName
 - [x] support --skip-tls
 - [x] support exporter
 - [x] print resource info instead of file path
