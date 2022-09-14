@@ -24,8 +24,7 @@ pub async fn watch(app: options::App) -> Result<()> {
         }
     };
 
-    let discovery = discovery::new_discovery(&cli).await?;
-
+    let discovery = discovery::new(&cli).await?;
     if let Some(resource) = app.resource.clone() {
         // Common discovery, parameters, and api configuration for a single resource
         let (ar, caps) = discovery::resolve_api_resource(&discovery, resource.as_str())

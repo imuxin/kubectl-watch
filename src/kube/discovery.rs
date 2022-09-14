@@ -1,7 +1,9 @@
+use crate::kube::apigroup::{AllResource, ApiCapabilities, ApiGroup, ApiResource};
+
 use anyhow::Result;
 use kube::{
     api::{Api, DynamicObject},
-    discovery::{ApiCapabilities, ApiResource, Discovery as KubeDiscovery, Scope},
+    discovery::Scope,
     Client,
 };
 use std::collections::HashMap;
@@ -14,7 +16,15 @@ enum DiscoveryMode {
     Block(Vec<String>),
 }
 
-#[allow(dead_code)]
+impl DiscoveryMode {
+    fn is_queryable(&self, group: &String) -> bool {
+        match &self {
+            Self::Allow(allowed) => allowed.contains(group),
+            Self::Block(blocked) => !blocked.contains(group),
+        }
+    }
+}
+
 pub struct Discovery {
     client: Client,
     groups: HashMap<String, ApiGroup>,
@@ -22,46 +32,42 @@ pub struct Discovery {
 }
 
 impl Discovery {
+    /// Construct a caching api discovery client
+    #[must_use]
+    pub fn new(client: Client) -> Self {
+        let groups = HashMap::new();
+        let mode = DiscoveryMode::Block(vec![]);
+        Self {
+            client,
+            groups,
+            mode,
+        }
+    }
+
     /// Returns iterator over all served groups
     pub fn groups(&self) -> impl Iterator<Item = &ApiGroup> {
         self.groups.values()
     }
-}
 
-#[allow(dead_code)]
-pub(crate) struct GroupVersionData {
-    /// Pinned api version
-    pub(crate) version: String,
-    /// Pair of dynamic resource info along with what it supports.
-    pub(crate) resources: Vec<(ApiResource, ApiCapabilities)>,
-}
-
-trait AllResource {
-    fn resources(&self) -> Vec<(ApiResource, ApiCapabilities)>;
-}
-
-#[allow(dead_code)]
-pub struct ApiGroup {
-    /// Name of the group e.g. apiregistration.k8s.io
-    name: String,
-    /// List of resource information, capabilities at particular versions
-    data: Vec<GroupVersionData>,
-    //// Preferred version if exported by the `APIGroup`
-    preferred: Option<String>,
-}
-
-impl ApiGroup {
-    pub fn resources(&self) -> Vec<(ApiResource, ApiCapabilities)> {
-        let mut r: Vec<(ApiResource, ApiCapabilities)> = vec![];
-        for i in self.data.iter() {
-            r.append(&mut i.resources.clone());
+    pub async fn run(mut self) -> Result<Self> {
+        self.groups.clear();
+        let api_groups = self.client.list_api_groups().await?;
+        // query regular groups + crds under /apis
+        for g in api_groups.groups {
+            let key = g.name.clone();
+            if self.mode.is_queryable(&key) {
+                let apigroup = ApiGroup::query_apis(&self.client, g).await?;
+                self.groups.insert(key, apigroup);
+            }
         }
-        return r;
-    }
-
-    /// Returns the name of this group.
-    pub fn name(&self) -> &str {
-        &self.name
+        // query core versions under /api
+        let corekey = ApiGroup::CORE_GROUP.to_string();
+        if self.mode.is_queryable(&corekey) {
+            let coreapis = self.client.list_core_api_versions().await?;
+            let apigroup = ApiGroup::query_core(&self.client, coreapis).await?;
+            self.groups.insert(corekey, apigroup);
+        }
+        Ok(self)
     }
 }
 
@@ -76,7 +82,14 @@ pub fn resolve_api_resource(
         .groups()
         .flat_map(|group| group.resources().into_iter().map(move |res| (group, res)))
         .filter(|(_, (res, _))| {
-            name.eq_ignore_ascii_case(&res.kind) || name.eq_ignore_ascii_case(&res.plural)
+            let is_in_short_names = if let Some(short_names) = &res.short_names.clone() {
+                short_names.contains(&name.to_owned())
+            } else {
+                false
+            };
+            name.eq_ignore_ascii_case(&res.kind)
+                || name.eq_ignore_ascii_case(&res.plural)
+                || is_in_short_names
         })
         .min_by_key(|(group, _res)| group.name())
         .map(|(_, res)| res)
@@ -90,18 +103,15 @@ pub fn dynamic_api(
     all: bool,
 ) -> Api<DynamicObject> {
     if caps.scope == Scope::Cluster || all {
-        Api::all_with(client, &ar)
+        Api::all_with(client, &ar.to_kube_ar())
     } else if let Some(namespace) = ns {
-        Api::namespaced_with(client, namespace, &ar)
+        Api::namespaced_with(client, namespace, &ar.to_kube_ar())
     } else {
-        Api::default_namespaced_with(client, &ar)
+        Api::default_namespaced_with(client, &ar.to_kube_ar())
     }
 }
 
-pub async fn new_discovery(cli: &Client) -> Result<Discovery> {
-    // discovery (to be able to infer apis from kind/plural only)
-    let discovery = KubeDiscovery::new(cli.clone()).run().await?;
-    // discovery2 will return all resources
-    let discovery2: Discovery = unsafe { std::mem::transmute(discovery) };
-    Ok(discovery2)
+pub async fn new(cli: &Client) -> Result<Discovery> {
+    let discovery = Discovery::new(cli.clone()).run().await?;
+    Ok(discovery)
 }
