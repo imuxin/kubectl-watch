@@ -2,11 +2,12 @@
 
 set -e
 
+SUDO="sudo"
 CMD_DOCKER=docker
 CMD_NERDCTL=nerdctl
 CMD=""
-IMG="ghcr.io/imuxin/kubectl-watch:latest"
-# IMG="docker.io/slic/kubectl-watch:latest" # docker hub image
+# IMG="ghcr.io/imuxin/kubectl-watch:latest"
+IMG="docker.io/slic/kubectl-watch:latest" # docker hub image
 KUBECONF="$HOME/.kube/config"
 MOUNTKUBECONF="/root/.kube/config"
 
@@ -30,7 +31,7 @@ function kubectl_watch() {
 		echo "container tool docker and nerdctl not found, please install one of them first."
 		exit -1
 	fi
-	$CMD run -ti --rm -v $KUBECONF:$MOUNTKUBECONF $IMG $@
+	$SUDO $CMD run -ti --rm -v $KUBECONF:$MOUNTKUBECONF $IMG $@
 }
 
 kubectl_watch $@

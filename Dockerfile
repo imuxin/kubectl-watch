@@ -1,13 +1,21 @@
-FROM rust:alpine as build
+FROM rust:1.63.0-buster as build
 COPY . /kubectl-watch
 WORKDIR /kubectl-watch
-# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-RUN apk add --no-cache musl-dev g++
-RUN cargo build --release --target x86_64-unknown-linux-musl
+RUN cargo build --release
 
-FROM alpine:edge
-# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-RUN apk add --no-cache git tini
-COPY --from=build /kubectl-watch/target/x86_64-unknown-linux-musl/release/kubectl-watch /usr/local/bin/kubectl-watch
-ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/kubectl-watch"]
+FROM debian:buster-slim as cache
+RUN apt update \
+    && apt install -y tini git
+
+FROM debian:buster-slim
+RUN apt update && apt install -y libpcre2-8-0 && rm -rf /var/lib/apt/lists/*
+COPY --from=cache /usr/bin/git /usr/bin/git
+COPY --from=cache /usr/bin/tini /usr/bin/tini
+COPY --from=build /kubectl-watch/target/release/kubectl-watch /usr/local/bin/kubectl-watch
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/kubectl-watch"]
 CMD ["-h"]
+
+# FOR Local Build
+# ENV HTTPS_PROXY=172.17.0.1:1081
+# RUN sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list
