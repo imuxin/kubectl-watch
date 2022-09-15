@@ -1,6 +1,7 @@
 use crate::diff;
 
 #[derive(clap::Parser)]
+#[clap(version, about, long_about = None)]
 pub struct App {
     /// Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)
     #[clap(long, short = 'l')]
