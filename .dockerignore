@@ -1,3 +1,7 @@
 .git/
+.vscode/
 Dockerfile
 target/
+issues/
+assets/
+script/

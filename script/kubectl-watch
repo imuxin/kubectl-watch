@@ -2,7 +2,9 @@
 
 set -e
 
-CMD=docker
+CMD_DOCKER=docker
+CMD_NERDCTL=nerdctl
+CMD=""
 IMG="ghcr.io/imuxin/kubectl-watch:latest"
 KUBECONF="$HOME/.kube/config"
 MOUNTKUBECONF="/root/.kube/config"
@@ -17,13 +19,17 @@ function cmd_exists() {
 
 
 function kubectl_watch() {
-	if ! cmd_exists $CMD
+	if cmd_exists $CMD_DOCKER
 	then
-		echo "not found: docker, please install docker."
+		CMD=$CMD_DOCKER
+	elif cmd_exists $CMD_NERDCTL
+	then
+		CMD=$CMD_NERDCTL
+	else
+		echo "container tool docker and nerdctl not found, please install container tool first."
 		exit -1
 	fi
-	$CMD run -ti --init --rm -v $KUBECONF:$MOUNTKUBECONF $IMG $@
+	$CMD run -ti --rm -v $KUBECONF:$MOUNTKUBECONF $IMG $@
 }
 
 kubectl_watch $@
-
