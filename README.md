@@ -53,9 +53,14 @@ export watched resources into local storage, just add `--export "/to/your/path"`
 kubectl-watch {resource-name} --export "/to/your/path"
 ```
 
+`managed-fields` will be default excluded, add `--include-managed-fields` can show the managed fields changes.
+```bash
+kubectl-watch {resource-name} -include-managed-fields
+```
+
 run `kubectl-watch -h` to get more help.
 ```bash
-kubectl-watch
+A kubectl plugin to provide a pretty delta change view of being watched kubernetes resources
 
 USAGE:
     kubectl-watch [OPTIONS] [ARGS]
@@ -74,6 +79,7 @@ OPTIONS:
     -n, --namespace <NAMESPACE>     If present, the namespace scope for this CLI request
     -s, --skip-delta                Skip show delta changes view
         --use-tls                   Use tls to request api-server
+    -V, --version                   Print version information
 ```
 
 ## Thanks
