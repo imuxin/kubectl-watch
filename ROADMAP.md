@@ -1,3 +1,4 @@
-# Kubectl-watch Roadmap [0.2.1]
+# Kubectl-watch Roadmap [0.3]
 
-- [ ] add unittest
+- [ ] Add unittest
+- [ ] Submitting plugins to Krew
