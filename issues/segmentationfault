@@ -60,3 +60,28 @@
 ==87==
 ==87== ERROR SUMMARY: 2 errors from 1 contexts (suppressed: 0 from 0)
 Segmentation fault
+
+==18880==
+==18880== Process terminating with default action of signal 11 (SIGSEGV)
+==18880==  Bad permissions for mapped region at address 0x1FB076
+==18880==    at 0x1FB076: ??? (in /kubectl-watch/target/debug/kubectl-watch)
+==18880==    by 0xBDF08A: ts_parser_set_language (parser.c:1790)
+==18880==    by 0xBBE6C3: tree_sitter::Parser::set_language (lib.rs:363)
+==18880==    by 0xB18F92: difft_lib::parse::tree_sitter_parser::parse_to_tree (tree_sitter_parser.rs:797)
+==18880==    by 0xB1A254: difft_lib::parse::tree_sitter_parser::parse (tree_sitter_parser.rs:941)
+==18880==    by 0xABCB4F: difft_lib::mainfn::diff_file_content (mainfn.rs:299)
+==18880==    by 0xABBA67: difft_lib::mainfn::diff_file (mainfn.rs:212)
+==18880==    by 0x39204A: <kubectl_watch::diff::difft::Difft as kubectl_watch::diff::Diff>::diff (difft.rs:29)
+==18880==    by 0x39D6D5: kubectl_watch::diff::diff (mod.rs:59)
+==18880==    by 0x3EBE91: kubectl_watch::kube::watch::delta_print_process::{{closure}} (watch.rs:86)
+==18880==    by 0x393EB8: <core::future::from_generator::GenFuture<T> as core::future::future::Future>::poll (mod.rs:91)
+==18880==    by 0x3EAD09: kubectl_watch::kube::watch::watch::{{closure}}::{{closure}} (watch.rs:48)
+==18880==
+==18880== HEAP SUMMARY:
+==18880==     in use at exit: 0 bytes in 0 blocks
+==18880==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
+==18880==
+==18880== All heap blocks were freed -- no leaks are possible
+==18880==
+==18880== For lists of detected and suppressed errors, rerun with: -s
+==18880== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

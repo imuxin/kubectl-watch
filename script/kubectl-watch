@@ -5,8 +5,8 @@ set -e
 CMD_DOCKER=docker
 CMD_NERDCTL=nerdctl
 CMD=""
-IMG="ghcr.io/imuxin/kubectl-watch:latest"
-# IMG="docker.io/slic/kubectl-watch:latest" # docker hub image
+# IMG="ghcr.io/imuxin/kubectl-watch:latest"
+IMG="docker.io/slic/kubectl-watch:latest" # docker hub image
 KUBECONF="$HOME/.kube/config"
 MOUNTKUBECONF="/root/.kube/config"
 
