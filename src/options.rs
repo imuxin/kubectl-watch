@@ -35,6 +35,8 @@ pub struct App {
     #[clap(long)]
     pub export: Option<String>,
 
+    /// Support resource 'plural', 'kind' and 'shortname'
     pub resource: Option<String>,
+    /// Resource name, optional
     pub name: Option<String>,
 }

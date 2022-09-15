@@ -26,48 +26,15 @@ cp script/kubectl-watch /usr/local/bin/
 chmod +x /usr/local/bin/kubectl-watch
 ```
 
-## Usage
+## Cmd Help
 
-watch deploy in all namespace
 ```bash
-kubectl-watch deployment -A
-```
-
-watch deploy on some namespace
-```bash
-kubectl-watch deployment -n {namespace}
-```
-
-watch without delta view, just add `--skip-delta` flag.
-```bash
-kubectl-watch {resource-name} --delta
-```
-
-watch with delta view by using `difftastic` tool, just add `--diff-tool difft`
-```bash
-kubectl-watch {resource-name} --diff-tool difft
-```
-
-export watched resources into local storage, just add `--export "/to/your/path"`
-```bash
-kubectl-watch {resource-name} --export "/to/your/path"
-```
-
-`managed-fields` will be default excluded, add `--include-managed-fields` can show the managed fields changes.
-```bash
-kubectl-watch {resource-name} -include-managed-fields
-```
-
-run `kubectl-watch -h` to get more help.
-```bash
-A kubectl plugin to provide a pretty delta change view of being watched kubernetes resources
-
 USAGE:
     kubectl-watch [OPTIONS] [ARGS]
 
 ARGS:
-    <RESOURCE>
-    <NAME>
+    <RESOURCE>    Support resource 'plural', 'kind' and 'shortname'
+    <NAME>        Resource name, optional
 
 OPTIONS:
     -A, --all                       If present, list the requested object(s) across all namespaces
@@ -82,7 +49,39 @@ OPTIONS:
     -V, --version                   Print version information
 ```
 
-## Thanks
+## Examples
+
+watch deploy in all namespace
+```bash
+kubectl-watch deployment -A
+```
+
+watch deploy on some namespace
+```bash
+kubectl-watch deployment -n {namespace}
+```
+
+watch without delta view, just add `--skip-delta` flag.
+```bash
+kubectl-watch {resource} --delta
+```
+
+watch with delta view by using `difftastic` tool, just add `--diff-tool difft`
+```bash
+kubectl-watch {resource} --diff-tool difft
+```
+
+export watched resources into local storage, just add `--export "/to/your/path"`
+```bash
+kubectl-watch {resource} --export "/to/your/path"
+```
+
+`managed-fields` will be default excluded, add `--include-managed-fields` can show the managed fields changes.
+```bash
+kubectl-watch {resource} -include-managed-fields
+```
+
+## Acknowledgment
 
 - [delta](https://github.com/dandavison/delta)
 - [difftastic](https://github.com/Wilfred/difftastic)
