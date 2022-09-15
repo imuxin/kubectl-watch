@@ -26,7 +26,7 @@ function kubectl_watch() {
 	then
 		CMD=$CMD_NERDCTL
 	else
-		echo "container tool docker and nerdctl not found, please install container tool first."
+		echo "container tool docker and nerdctl not found, please install one of them first."
 		exit -1
 	fi
 	$CMD run -ti --rm -v $KUBECONF:$MOUNTKUBECONF $IMG $@
