@@ -1352,7 +1352,7 @@ dependencies = [
 
 [[package]]
 name = "kubectl-watch"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "clap 3.2.20",
