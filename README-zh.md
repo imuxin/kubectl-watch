@@ -1,35 +1,33 @@
 # kubectl-watch
 
-[中文](./README-zh.md)
+[English](./README.md)
 
-Another watch tool with visualization view of delta change for kubernetes resources.
+一个可以监听 kubernetes 资源的变更信息的 kubectl 插件。其中变更的内容通过使用 [delta](https://github.com/dandavison/delta) 或 [difftastic](https://github.com/Wilfred/difftastic) 工具提供漂亮的终端界面展示。
 
-|         overview of using delta diff tool          |       overview of using difftastic diff tool       |
+|                  使用 delta 概览                   |                使用 difftastic 概览                |
 | :------------------------------------------------: | :------------------------------------------------: |
 | ![overview-delta.png](./assets/overview-delta.png) | ![overview-difft.png](./assets/overview-difft.png) |
 
 
-## Installation
+## 安装说明
 
-### Use docker image [recommend]
+### 方式一：使用 Docker 镜像 [推荐]
 
-1. Docker should be preinstalled, more installation details please visit [official website](https://docs.docker.com/engine/install/).
-
-2. copy the kubectl-watch script into your $PATH folder
+1. 您需要在环境里预先安装好 Docker，参考 [官网](https://docs.docker.com/engine/install/)；或者安装 containerd，参考 [安装教程](https://github.com/containerd/containerd/blob/main/docs/getting-started.md#installing-containerd) 和 [nerdctl](https://github.com/containerd/nerdctl) 命令行工具。
+2. 拷贝 script 目录下的 kubectl-watch 脚本到环境的 $PATH 其中的一个目录下，比如 `/usr/local/bin`。
 ```bash
 cp script/kubectl-watch /usr/local/bin/
 chmod +x /usr/local/bin/kubectl-watch
 ```
 
-### Download kubectl-watch from [release assets](https://github.com/imuxin/kubectl-watch/releases).
-
-### Build and install from source using [Cargo](https://crates.io/crates/kubectl-watch):
+### 从 [release assets](https://github.com/imuxin/kubectl-watch/releases) 下载可执行制品。
+### 使用 [Cargo](https://crates.io/crates/kubectl-watch)进行源码编译安装。
 
 ```bash
 cargo install kubectl-watch --locked
 ```
 
-## Cmd Help
+## Cmd 帮助
 
 ```bash
 USAGE:
@@ -52,39 +50,44 @@ OPTIONS:
     -V, --version                   Print version information
 ```
 
-## Examples
+## 参考实例
 
-watch deploy in all namespace
+监听所有命名空间下的 deployment 资源
 ```bash
 kubectl-watch deployment -A
 ```
 
-watch deploy on some namespace
+监听某个命名空间下的 depoyment 资源
 ```bash
 kubectl-watch deployment -n {namespace}
 ```
 
-watch without delta view, just add `--skip-delta` flag.
+监听某个命名空间下的某个 depoyment 资源
+```bash
+kubectl-watch deployment -n {namespace} {name}
+```
+
+追加 `--skip-delta` 选项，仅监听变动资源，同 `kubectl get -w`
 ```bash
 kubectl-watch {resource} --delta
 ```
 
-watch with delta view by using `difftastic` tool, just add `--diff-tool difft`
+追加 `--diff-tool difft` 选项来使用 `difftastic` 工具显示变化内容
 ```bash
 kubectl-watch {resource} --diff-tool difft
 ```
 
-export watched resources into local storage, just add `--export "/to/your/path"`
+追加 `--export "/to/your/path"` 选项，导出监听的资源到本地存储
 ```bash
 kubectl-watch {resource} --export "/to/your/path"
 ```
 
-`managed-fields` will be default excluded, add `--include-managed-fields` can show the managed fields changes.
+`managed-fields` 默认是不进行比对的, 追加 `--include-managed-fields` 选项，展示 managed fields 的变化
 ```bash
 kubectl-watch {resource} -include-managed-fields
 ```
 
-## Acknowledgment
+## 致谢
 
 - [delta](https://github.com/dandavison/delta)
 - [difftastic](https://github.com/Wilfred/difftastic)
