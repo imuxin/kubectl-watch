@@ -8,15 +8,7 @@ Another watch tool with visualization view of delta change for kubernetes resour
 
 ## Installation
 
-### Download kubectl-watch from [release assets](https://github.com/imuxin/kubectl-watch/releases).
-
-### Build and install from source using [Cargo](https://crates.io/crates/kubectl-watch):
-
-```bash
-cargo install kubectl-watch --locked
-```
-
-### docker image
+### Use docker image [recommend]
 
 1. Docker should be preinstalled, more installation details please visit [official website](https://docs.docker.com/engine/install/).
 
@@ -24,6 +16,14 @@ cargo install kubectl-watch --locked
 ```bash
 cp script/kubectl-watch /usr/local/bin/
 chmod +x /usr/local/bin/kubectl-watch
+```
+
+### Download kubectl-watch from [release assets](https://github.com/imuxin/kubectl-watch/releases).
+
+### Build and install from source using [Cargo](https://crates.io/crates/kubectl-watch):
+
+```bash
+cargo install kubectl-watch --locked
 ```
 
 ## Cmd Help
