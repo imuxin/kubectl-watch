@@ -11,7 +11,7 @@
 
 ## 安装说明
 
-### 方式一：使用 Docker 镜像 [推荐]
+### [推荐] 方式一：使用 Docker 镜像
 
 1. 您需要在环境里预先安装好 Docker，参考 [官网](https://docs.docker.com/engine/install/)；或者安装 containerd，参考 [安装教程](https://github.com/containerd/containerd/blob/main/docs/getting-started.md#installing-containerd) 和 [nerdctl](https://github.com/containerd/nerdctl) 命令行工具。
 2. 拷贝 script 目录下的 kubectl-watch 脚本到环境的 $PATH 其中的一个目录下，比如 `/usr/local/bin`。
@@ -20,8 +20,8 @@ cp script/kubectl-watch /usr/local/bin/
 chmod +x /usr/local/bin/kubectl-watch
 ```
 
-### 从 [release assets](https://github.com/imuxin/kubectl-watch/releases) 下载可执行制品。
-### 使用 [Cargo](https://crates.io/crates/kubectl-watch)进行源码编译安装。
+### 方式二：从 [release assets](https://github.com/imuxin/kubectl-watch/releases) 下载可执行制品。
+### 方式三：使用 [Cargo](https://crates.io/crates/kubectl-watch)进行源码编译安装。
 
 ```bash
 cargo install kubectl-watch --locked
