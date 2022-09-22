@@ -8,7 +8,7 @@ RUN apt update \
     && apt install -y tini git
 
 FROM debian:buster-slim
-RUN apt update && apt install -y libpcre2-8-0 && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y libpcre2-8-0 ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=cache /usr/bin/git /usr/bin/git
 COPY --from=cache /usr/bin/tini /usr/bin/tini
 COPY --from=build /kubectl-watch/target/release/kubectl-watch /usr/local/bin/kubectl-watch

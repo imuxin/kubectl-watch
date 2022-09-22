@@ -6,8 +6,8 @@ name: Docker
 # documentation.
 
 on:
-  release:
-    types: [created]
+  push:
+    branches: [ "master" ]
 
 env:
   # Use docker.io for Docker Hub if empty
