@@ -8,6 +8,8 @@ name: Docker
 on:
   push:
     branches: [ "master" ]
+  release:
+    types: [created]
 
 env:
   # Use docker.io for Docker Hub if empty
