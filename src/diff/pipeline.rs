@@ -14,7 +14,10 @@ impl Pipeline {
         p.add_task(exclude_types);
         p
     }
-    pub fn add_task(&mut self, task: fn(&mut dynamic_object::DynamicObject, &mut dynamic_object::DynamicObject)) {
+    pub fn add_task(
+        &mut self,
+        task: fn(&mut dynamic_object::DynamicObject, &mut dynamic_object::DynamicObject),
+    ) {
         self.tasks.push(task);
     }
 }
@@ -27,7 +30,10 @@ impl Process for Pipeline {
     }
 }
 
-pub fn exclude_managed_fields(l: &mut dynamic_object::DynamicObject, r: &mut dynamic_object::DynamicObject) {
+pub fn exclude_managed_fields(
+    l: &mut dynamic_object::DynamicObject,
+    r: &mut dynamic_object::DynamicObject,
+) {
     l.exclude_managed_fields();
     r.exclude_managed_fields();
 }

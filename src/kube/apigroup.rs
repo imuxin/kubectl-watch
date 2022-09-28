@@ -87,7 +87,7 @@ pub struct ApiResource {
 
 impl ApiResource {
     pub fn to_kube_ar(self) -> KubeApiResource {
-        KubeApiResource{
+        KubeApiResource {
             group: self.group,
             version: self.version,
             api_version: self.api_version,

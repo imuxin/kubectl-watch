@@ -11,6 +11,7 @@ use k8s_openapi::{
 };
 use kube::{
     api::{DynamicObject, ListParams, ResourceExt},
+    discovery::Scope,
     runtime::{watcher, WatchStreamExt},
 };
 use std::collections::HashMap;
@@ -29,10 +30,16 @@ pub async fn watch(app: options::App) -> Result<()> {
         // Common discovery, parameters, and api configuration for a single resource
         let (ar, caps) = discovery::resolve_api_resource(&discovery, resource.as_str())
             .with_context(|| format!("resource {:?} not found in cluster", resource))?;
+
+        if caps.scope == Scope::Cluster && !app.namespace.is_none() {
+            panic!("{} is not a Namespaced-Resources!", resource);
+        }
+
         let mut lp = ListParams::default();
         if let Some(label) = app.selector.clone() {
             lp = lp.labels(label.as_str());
         }
+
         if let Some(name) = app.name.clone() {
             lp = lp.fields(&format!("metadata.name={}", name));
         }
@@ -78,7 +85,7 @@ async fn delta_print_process(
     while let Some(obj) = rx.recv().await {
         let empty_list = Vec::<DynamicObject>::new();
         let name = obj.name_any();
-        let namespace = obj.namespace().unwrap();
+        let namespace = obj.namespace().unwrap_or_default();
         let key = name + &namespace;
         map.entry(key.clone()).or_insert(empty_list);
         if let Some(list) = map.get_mut(&key.clone()) {

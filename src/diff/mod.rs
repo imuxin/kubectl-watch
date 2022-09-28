@@ -63,7 +63,7 @@ fn paint_header_line(list: &Vec<DynamicObject>) {
     let obj = list.last().unwrap();
     let api_version = &obj.types.as_ref().unwrap().api_version;
     let kind = &obj.types.as_ref().unwrap().kind;
-    let namespace = &obj.namespace().unwrap();
+    let namespace = &obj.namespace().unwrap_or_default();
     let name = &obj.name_any();
 
     let header_line_with_color = format!(
