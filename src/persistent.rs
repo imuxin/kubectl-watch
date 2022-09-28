@@ -43,10 +43,7 @@ pub fn store_resource(path: &Option<String>, obj: &DynamicObject) {
         path_buf.push(obj.name_any());
         fs::create_dir_all(&path_buf).unwrap();
 
-        let file_name = format!(
-            "{}.yaml",
-            obj.meta().resource_version.clone().unwrap()
-        );
+        let file_name = format!("{}.yaml", obj.meta().resource_version.clone().unwrap());
         path_buf.push(file_name);
 
         let yaml = serde_yaml::to_string(obj).unwrap();
