@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::{
     APIGroup, APIResource, APIResourceList, APIVersions,
 };
@@ -149,7 +150,7 @@ pub struct ApiGroup {
 }
 
 pub trait AllResource {
-    fn resources(&self) -> Vec<(ApiResource, ApiCapabilities)>;
+    fn recommended_resources(&self) -> Vec<(ApiResource, ApiCapabilities)>;
 }
 
 impl ApiGroup {
@@ -163,12 +164,21 @@ impl ApiGroup {
 }
 
 impl AllResource for ApiGroup {
-    fn resources(&self) -> Vec<(ApiResource, ApiCapabilities)> {
-        let mut r: Vec<(ApiResource, ApiCapabilities)> = vec![];
-        for i in self.data.iter() {
-            r.append(&mut i.resources.clone());
-        }
-        return r;
+    fn recommended_resources(&self) -> Vec<(ApiResource, ApiCapabilities)> {
+        self.data
+            .iter()
+            .map(|gvd| gvd.resources.clone())
+            .concat()
+            .iter()
+            .into_group_map_by(|(ar, _)| ar.kind.clone())
+            .into_iter()
+            .map(|(_, mut v)| {
+                v.sort_by_cached_key(|(ar, _)| {
+                    Reverse(Version::parse(ar.version.as_str()).priority())
+                });
+                v[0].to_owned()
+            })
+            .collect()
     }
 }
 
