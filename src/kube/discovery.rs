@@ -87,7 +87,6 @@ pub fn resolve_api_resource(
                 .map(move |res| (group, res))
         })
         .filter(|(_, (res, _))| {
-            println!("{} {}", res.kind.clone(), res.version.clone());
             let is_in_short_names = if let Some(short_names) = &res.short_names.clone() {
                 short_names.contains(&name.to_owned())
             } else {
