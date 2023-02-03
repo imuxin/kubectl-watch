@@ -1,4 +1,25 @@
-use crate::diff;
+#[derive(clap::ArgEnum, Clone, PartialEq, Eq)]
+pub enum Mode {
+    TUI,
+    Expand,
+    Simple,
+}
+impl Default for Mode {
+    fn default() -> Self {
+        Self::TUI
+    }
+}
+
+#[derive(clap::ArgEnum, Clone, PartialEq, Eq)]
+pub enum DiffTool {
+    Delta,
+    Difft,
+}
+impl Default for DiffTool {
+    fn default() -> Self {
+        Self::Delta
+    }
+}
 
 #[derive(clap::Parser)]
 #[clap(version, about, long_about = None)]
@@ -15,13 +36,13 @@ pub struct App {
     #[clap(long, short = 'A')]
     pub all: bool,
 
-    /// Skip show delta changes view
-    #[clap(long, short)]
-    pub skip_delta: bool,
+    /// delta changes view mode
+    #[clap(long, arg_enum, default_value_t)]
+    pub mode: Mode,
 
     /// Diff tool to analyze delta changes
     #[clap(long, arg_enum, default_value_t)]
-    pub diff_tool: diff::DiffTool,
+    pub diff_tool: DiffTool,
 
     /// Use tls to request api-server
     #[clap(long)]
