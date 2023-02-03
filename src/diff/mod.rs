@@ -13,25 +13,14 @@ use kube::api::DynamicObject;
 use kube::ResourceExt;
 use std::path::PathBuf;
 
-#[derive(clap::ArgEnum, Clone, PartialEq, Eq)]
-pub enum DiffTool {
-    Delta,
-    Difft,
-}
-impl Default for DiffTool {
-    fn default() -> Self {
-        Self::Delta
-    }
-}
-
 pub trait Diff {
     fn diff(&mut self, minus_file: PathBuf, plus_file: PathBuf) -> std::io::Result<i32>;
 }
 
-fn new(diff_tool: &DiffTool) -> Box<dyn Diff> {
+fn new(diff_tool: &options::DiffTool) -> Box<dyn Diff> {
     match diff_tool {
-        DiffTool::Delta => Box::new(delta::Delta::new()),
-        DiffTool::Difft => Box::new(difft::Difft::new()),
+        options::DiffTool::Delta => Box::new(delta::Delta::new()),
+        options::DiffTool::Difft => Box::new(difft::Difft::new()),
     }
 }
 

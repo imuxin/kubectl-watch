@@ -6,32 +6,14 @@
     "configurations": [
         {
             "name": "(gdb) Launch kubectl-watch",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/target/debug/kubectl-watch",
             "args": [
                 "gatewaydeploy",
-                "-n",
-                "ql-ovn",
-                "--skip-tls"
+                "-A"
             ],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Set Disassembly Flavor to Intel",
-                    "text": "-gdb-set disassembly-flavor intel",
-                    "ignoreFailures": true
-                }
-            ]
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
