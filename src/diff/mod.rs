@@ -4,6 +4,7 @@ mod pipeline;
 mod utils;
 
 use self::pipeline::Process;
+
 use crate::kube::dynamic_object;
 use crate::options;
 use crate::persistent;
@@ -12,9 +13,15 @@ use colored::*;
 use kube::api::DynamicObject;
 use kube::ResourceExt;
 use std::path::PathBuf;
+use tui::widgets::Paragraph;
 
 pub trait Diff {
     fn diff(&mut self, minus_file: PathBuf, plus_file: PathBuf) -> std::io::Result<i32>;
+    fn tui_diff_table(
+        &mut self,
+        _minus_file: PathBuf,
+        _plus_file: PathBuf,
+    ) -> (Paragraph, Paragraph);
 }
 
 fn new(diff_tool: &options::DiffTool) -> Box<dyn Diff> {

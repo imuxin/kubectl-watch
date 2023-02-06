@@ -11,7 +11,9 @@
             "program": "${workspaceFolder}/target/debug/kubectl-watch",
             "args": [
                 "gatewaydeploy",
-                "-A"
+                "-A",
+                "--mode=expand",
+                "--diff-tool=difft"
             ],
             "cwd": "${workspaceFolder}"
         }

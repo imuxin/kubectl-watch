@@ -1,5 +1,6 @@
 use crate::output;
 use crate::output::event;
+
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture, KeyCode},
     execute,
@@ -11,7 +12,7 @@ use std::io;
 use tokio::sync::mpsc;
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Span, Spans},
     widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState},
@@ -197,14 +198,27 @@ fn draw_diff<B>(f: &mut Frame<B>, app: &mut App, area: Rect)
 where
     B: Backend,
 {
+    f.render_widget(
+        Block::default().borders(Borders::ALL).title("Diff Result"),
+        area,
+    );
+
+    let chunks = Layout::default()
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .margin(1)
+        .direction(Direction::Horizontal)
+        .split(area);
+
     let text = vec![Spans::from(Span::styled(
         app.text.as_str(),
         Style::default().fg(Color::Red),
     ))];
+
     let paragraph = Paragraph::new(text.clone())
         // .style(Style::default())
-        .block(Block::default().borders(Borders::ALL).title("Diff Content"))
+        // .block(Block::default().borders(Borders::NONE))
         // .block(create_block("Diff Content"))
         .alignment(Alignment::Left);
-    f.render_widget(paragraph, area);
+    f.render_widget(paragraph.clone(), chunks[0]);
+    f.render_widget(paragraph, chunks[1]);
 }

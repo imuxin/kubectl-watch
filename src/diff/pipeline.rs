@@ -1,4 +1,4 @@
-use crate::diff::dynamic_object;
+use crate::kube::dynamic_object;
 
 pub trait Process {
     fn process(self, l: &mut dynamic_object::DynamicObject, r: &mut dynamic_object::DynamicObject);
