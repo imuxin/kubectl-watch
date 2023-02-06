@@ -1,6 +1,7 @@
 use crate::diff::Diff;
 use difft_lib::{diff_file, options, print_diff_result};
 use std::path::PathBuf;
+use tui::widgets::Paragraph;
 
 pub struct Difft {}
 
@@ -39,5 +40,13 @@ impl Diff for Difft {
         );
         print_diff_result(&display_options, &diff_result);
         Ok(0)
+    }
+
+    fn tui_diff_table(
+        &mut self,
+        _minus_file: PathBuf,
+        _plus_file: PathBuf,
+    ) -> (Paragraph, Paragraph) {
+        todo!();
     }
 }

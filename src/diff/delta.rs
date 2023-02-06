@@ -7,6 +7,7 @@ use delta_lib::{
     },
 };
 use std::path::PathBuf;
+use tui::widgets::Paragraph;
 
 pub struct Delta {
     config: config::Config,
@@ -41,5 +42,12 @@ impl Diff for Delta {
         let writer = self.output_type.handle().unwrap();
         let exit_code = subcommands::diff::diff(&minus_file, &plus_file, &self.config, writer);
         Ok(exit_code)
+    }
+    fn tui_diff_table(
+        &mut self,
+        _minus_file: PathBuf,
+        _plus_file: PathBuf,
+    ) -> (Paragraph, Paragraph) {
+        panic!("error: not implemented yet.")
     }
 }

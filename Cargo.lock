@@ -583,8 +583,6 @@ dependencies = [
 [[package]]
 name = "difftastic-lib"
 version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d3453001a7ef402acedf18c583c2b515017e627c5ea9807abf41c3e1c8007ae"
 dependencies = [
  "atty",
  "bumpalo",
