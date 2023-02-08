@@ -43,7 +43,10 @@ pub async fn delta_print_process(
     Ok(())
 }
 
-pub async fn tui_print_process(mut rx: Receiver<DynamicObject>) -> anyhow::Result<()> {
+pub async fn tui_print_process(
+    app: &options::App,
+    mut rx: Receiver<DynamicObject>,
+) -> anyhow::Result<()> {
     let (sender, receiver) = event::new_chan();
     let sender2 = sender.clone();
 
@@ -62,7 +65,7 @@ pub async fn tui_print_process(mut rx: Receiver<DynamicObject>) -> anyhow::Resul
     });
 
     // draw terminal ui
-    tui::main_tui(receiver).await
+    tui::main_tui(app, receiver).await
 }
 
 fn format_creation_since(time: Option<Time>) -> String {

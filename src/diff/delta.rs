@@ -6,6 +6,7 @@ use delta_lib::{
         process,
     },
 };
+use kube::api::DynamicObject;
 use std::path::PathBuf;
 use tui::widgets::Paragraph;
 
@@ -37,17 +38,19 @@ impl Delta {
     }
 }
 
-impl Diff for Delta {
+impl<'a> Diff<'a> for Delta {
     fn diff(&mut self, minus_file: PathBuf, plus_file: PathBuf) -> std::io::Result<i32> {
         let writer = self.output_type.handle().unwrap();
         let exit_code = subcommands::diff::diff(&minus_file, &plus_file, &self.config, writer);
         Ok(exit_code)
     }
-    fn tui_diff_table(
+
+    #[allow(unused_variables)]
+    fn tui_diff(
         &mut self,
-        _minus_file: PathBuf,
-        _plus_file: PathBuf,
-    ) -> (Paragraph, Paragraph) {
+        pre: &DynamicObject,
+        next: &DynamicObject,
+    ) -> (Paragraph<'a>, Paragraph<'a>) {
         panic!("error: not implemented yet.")
     }
 }

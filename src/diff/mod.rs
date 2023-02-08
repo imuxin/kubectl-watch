@@ -15,19 +15,15 @@ use kube::ResourceExt;
 use std::path::PathBuf;
 use tui::widgets::Paragraph;
 
-pub trait Diff {
+pub trait Diff<'a> {
     fn diff(&mut self, minus_file: PathBuf, plus_file: PathBuf) -> std::io::Result<i32>;
-    fn tui_diff_table(
-        &mut self,
-        _minus_file: PathBuf,
-        _plus_file: PathBuf,
-    ) -> (Paragraph, Paragraph);
+    fn tui_diff(&mut self, pre: &DynamicObject, next: &DynamicObject) -> (Paragraph<'a>, Paragraph<'a>);
 }
 
-fn new(diff_tool: &options::DiffTool) -> Box<dyn Diff> {
-    match diff_tool {
+pub fn new<'a>(app: &options::App) -> Box<dyn Diff<'a>> {
+    match app.diff_tool {
         options::DiffTool::Delta => Box::new(delta::Delta::new()),
-        options::DiffTool::Difft => Box::new(difft::Difft::new()),
+        options::DiffTool::Difft => Box::new(difft::Difft::new(app.include_managed_fields)),
     }
 }
 
@@ -52,8 +48,30 @@ pub fn diff(app: &options::App, v: &Vec<DynamicObject>) -> std::io::Result<i32> 
     // init delta args
     let (minus_file, plus_file) = persistent::tmp_store(&l, &r);
 
-    new(&app.diff_tool).diff(minus_file, plus_file)
+    new(app).diff(minus_file, plus_file)
 }
+
+// pub fn diff2<'a>(
+//     app: &options::App,
+//     l: &DynamicObject,
+//     r: &DynamicObject,
+// ) -> (Paragraph<'a>, Paragraph<'a>) {
+//     let mut p = pipeline::Pipeline::init();
+
+//     if !app.include_managed_fields {
+//         p.add_task(pipeline::exclude_managed_fields);
+//     }
+
+//     let mut ll = dynamic_object::DynamicObject::from(l);
+//     let mut rr = dynamic_object::DynamicObject::from(r);
+
+//     p.process(&mut ll, &mut rr);
+
+//     // init delta args
+//     let (minus_file, plus_file) = persistent::tmp_store(&ll, &rr);
+
+//     new(app.diff_tool.clone()).tui_diff_table(l, r)
+// }
 
 fn paint_header_line(list: &Vec<DynamicObject>) {
     let obj = list.last().unwrap();
