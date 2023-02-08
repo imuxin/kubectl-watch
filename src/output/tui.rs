@@ -1,3 +1,5 @@
+use crate::diff;
+use crate::options;
 use crate::output;
 use crate::output::event;
 
@@ -12,27 +14,30 @@ use std::io;
 use tokio::sync::mpsc;
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    text::{Span, Spans},
     widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState},
     Frame, Terminal,
 };
 
-struct App {
+struct Controller<'a> {
+    diff_tool: Box<dyn diff::Diff<'a>>,
     state: TableState,
     items: Vec<DynamicObject>,
     map: HashMap<String, Vec<DynamicObject>>,
-    text: String,
+    l_diff: Paragraph<'a>,
+    r_diff: Paragraph<'a>,
 }
 
-impl App {
-    fn new() -> App {
-        App {
+impl<'a> Controller<'a> {
+    fn new(diff_tool: Box<dyn diff::Diff<'a>>) -> Controller<'a> {
+        Controller {
+            diff_tool: diff_tool,
             state: TableState::default(),
             items: vec![],
             map: HashMap::new(),
-            text: "no diff for first event".to_string(),
+            l_diff: Paragraph::new(""),
+            r_diff: Paragraph::new(""),
         }
     }
 
@@ -50,7 +55,7 @@ impl App {
         return raws;
     }
 
-    fn get_header<'a>(&mut self) -> Vec<&'a str> {
+    fn get_header<'b>(&mut self) -> Vec<&'b str> {
         return vec!["ID", "NAMESPACE", "NAME", "AGE", "REV"];
     }
 
@@ -66,6 +71,34 @@ impl App {
         self.items.push(obj)
     }
 
+    fn index(&mut self, select: usize) -> usize {
+        let obj = self.items.get(select).unwrap();
+        let name = obj.name_any();
+        let namespace = obj.namespace().unwrap_or_default();
+        let key = name + &namespace;
+        for (i, item) in self.map.get(&key.clone()).unwrap().iter().enumerate() {
+            if item.resource_version().unwrap() == obj.resource_version().unwrap() {
+                return i;
+            }
+        }
+        0
+    }
+
+    fn do_diff(&mut self, select: usize) {
+        let pos = self.index(select);
+        if pos == 0 {
+            return;
+        }
+        let obj = self.items.get(select).unwrap();
+        let name = obj.name_any();
+        let namespace = obj.namespace().unwrap_or_default();
+        let key = name + &namespace;
+        (self.l_diff, self.r_diff) = self.diff_tool.tui_diff(
+            self.map.get(&key.clone()).unwrap().get(pos - 1).unwrap(),
+            obj,
+        )
+    }
+
     pub fn next(&mut self) {
         let i = match self.state.selected() {
             Some(i) => {
@@ -77,6 +110,7 @@ impl App {
             }
             None => 0,
         };
+        self.do_diff(i);
         self.state.select(Some(i));
     }
 
@@ -91,11 +125,12 @@ impl App {
             }
             None => 0,
         };
+        self.do_diff(i);
         self.state.select(Some(i));
     }
 }
 
-pub async fn main_tui(chan: mpsc::Receiver<event::Msg>) -> anyhow::Result<()> {
+pub async fn main_tui(app: &options::App, chan: mpsc::Receiver<event::Msg>) -> anyhow::Result<()> {
     // setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -103,9 +138,10 @@ pub async fn main_tui(chan: mpsc::Receiver<event::Msg>) -> anyhow::Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // create app and run it
-    let app = App::new();
-    let res = run_app(&mut terminal, app, chan).await;
+    // create ctrl and run it
+    let diff_tool = diff::new(app);
+    let ctrl = Controller::new(diff_tool);
+    let res = run_tui(&mut terminal, ctrl, chan).await;
 
     // restore terminal
     disable_raw_mode()?;
@@ -123,48 +159,48 @@ pub async fn main_tui(chan: mpsc::Receiver<event::Msg>) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn run_app<B: Backend>(
+async fn run_tui<B: Backend>(
     terminal: &mut Terminal<B>,
-    mut app: App,
+    mut ctrl: Controller<'static>,
     mut chan: mpsc::Receiver<event::Msg>,
 ) -> anyhow::Result<()> {
     loop {
-        terminal.draw(|f| ui(f, &mut app))?;
+        terminal.draw(|f| ui(f, &mut ctrl))?;
 
         if let Some(_msg) = chan.recv().await {
             match _msg {
                 event::Msg::Key(key) => match key.code {
                     KeyCode::Char('q') => return Ok(()),
-                    KeyCode::Down | KeyCode::Char('j') => app.next(),
-                    KeyCode::Up | KeyCode::Char('k') => app.previous(),
+                    KeyCode::Down | KeyCode::Char('j') => ctrl.next(),
+                    KeyCode::Up | KeyCode::Char('k') => ctrl.previous(),
                     _ => {}
                 },
-                event::Msg::Obj(obj) => app.update(obj),
+                event::Msg::Obj(obj) => ctrl.update(obj),
             }
         }
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+fn ui<B: Backend>(f: &mut Frame<B>, ctrl: &mut Controller) {
     let chunks = Layout::default()
         .constraints([Constraint::Length(10), Constraint::Min(10)].as_ref())
         .split(f.size());
 
-    draw_resources_event(f, app, chunks[0]);
-    draw_diff(f, app, chunks[1]);
+    draw_resources_event(f, ctrl, chunks[0]);
+    draw_diff(f, ctrl, chunks[1]);
 }
 
-fn draw_resources_event<B>(f: &mut Frame<B>, app: &mut App, area: Rect)
+fn draw_resources_event<B>(f: &mut Frame<B>, ctrl: &mut Controller, area: Rect)
 where
     B: Backend,
 {
     let selected_style = Style::default().bg(Color::Black).fg(Color::LightRed);
-    let header = Row::new(app.get_header())
+    let header = Row::new(ctrl.get_header())
         .style(Style::default().fg(Color::LightBlue))
         .height(1)
         .bottom_margin(0);
 
-    let r = app.get_raws();
+    let r = ctrl.get_raws();
     let rows = r.iter().map(|item| {
         let height = &item
             .iter()
@@ -191,10 +227,10 @@ where
             Constraint::Percentage(15),
             // Constraint::Min(10),
         ]);
-    f.render_stateful_widget(t, area, &mut app.state);
+    f.render_stateful_widget(t, area, &mut ctrl.state);
 }
 
-fn draw_diff<B>(f: &mut Frame<B>, app: &mut App, area: Rect)
+fn draw_diff<B>(f: &mut Frame<B>, ctrl: &mut Controller, area: Rect)
 where
     B: Backend,
 {
@@ -209,16 +245,6 @@ where
         .direction(Direction::Horizontal)
         .split(area);
 
-    let text = vec![Spans::from(Span::styled(
-        app.text.as_str(),
-        Style::default().fg(Color::Red),
-    ))];
-
-    let paragraph = Paragraph::new(text.clone())
-        // .style(Style::default())
-        // .block(Block::default().borders(Borders::NONE))
-        // .block(create_block("Diff Content"))
-        .alignment(Alignment::Left);
-    f.render_widget(paragraph.clone(), chunks[0]);
-    f.render_widget(paragraph, chunks[1]);
+    f.render_widget(ctrl.l_diff.clone(), chunks[0]);
+    f.render_widget(ctrl.r_diff.clone(), chunks[1]);
 }

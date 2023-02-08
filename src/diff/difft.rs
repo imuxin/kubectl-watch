@@ -1,17 +1,26 @@
+use crate::diff::pipeline;
 use crate::diff::Diff;
+use crate::diff::Process;
+use crate::kube::dynamic_object;
+use crate::persistent;
 use difft_lib::{diff_file, options, print_diff_result};
+use kube::api::DynamicObject;
 use std::path::PathBuf;
 use tui::widgets::Paragraph;
 
-pub struct Difft {}
+pub struct Difft {
+    include_managed_fields: bool,
+}
 
 impl Difft {
-    pub fn new() -> Self {
-        Difft {}
+    pub fn new(include_managed_fields: bool) -> Self {
+        Difft {
+            include_managed_fields: include_managed_fields,
+        }
     }
 }
 
-impl Diff for Difft {
+impl<'a> Diff<'a> for Difft {
     fn diff(&mut self, minus_file: PathBuf, plus_file: PathBuf) -> std::io::Result<i32> {
         let graph_limit = options::DEFAULT_GRAPH_LIMIT;
         let byte_limit = options::DEFAULT_BYTE_LIMIT;
@@ -42,11 +51,29 @@ impl Diff for Difft {
         Ok(0)
     }
 
-    fn tui_diff_table(
+    #[allow(unused_variables)]
+    fn tui_diff(
         &mut self,
-        _minus_file: PathBuf,
-        _plus_file: PathBuf,
-    ) -> (Paragraph, Paragraph) {
-        todo!();
+        pre: &DynamicObject,
+        next: &DynamicObject,
+    ) -> (Paragraph<'a>, Paragraph<'a>) {
+        let mut p = pipeline::Pipeline::init();
+        if !self.include_managed_fields {
+            p.add_task(pipeline::exclude_managed_fields);
+        }
+
+        let mut l = dynamic_object::DynamicObject::from(pre);
+        let mut r = dynamic_object::DynamicObject::from(next);
+
+        p.process(&mut l, &mut r);
+
+        // init delta args
+        let (minus_file, plus_file) = persistent::tmp_store(&l, &r);
+        // TODO: difft diff here
+
+        (
+            Paragraph::new("left").alignment(tui::layout::Alignment::Left),
+            Paragraph::new("right").alignment(tui::layout::Alignment::Left),
+        )
     }
 }

@@ -17,7 +17,7 @@ pub enum DiffTool {
 }
 impl Default for DiffTool {
     fn default() -> Self {
-        Self::Delta
+        Self::Difft
     }
 }
 
