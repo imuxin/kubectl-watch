@@ -16,7 +16,8 @@ use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState},
+    text::Span,
+    widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState, Wrap},
     Frame, Terminal,
 };
 
@@ -87,6 +88,10 @@ impl<'a> Controller<'a> {
     fn do_diff(&mut self, select: usize) {
         let pos = self.index(select);
         if pos == 0 {
+            // set default diff msg
+            self.l_diff = Paragraph::new(Span::from("no previous item to compare."))
+                .wrap(Wrap { trim: true });
+            self.r_diff = Paragraph::new("");
             return;
         }
         let obj = self.items.get(select).unwrap();
