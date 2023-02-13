@@ -1,5 +1,0 @@
-hello
-novel
-world
-
-foo bar

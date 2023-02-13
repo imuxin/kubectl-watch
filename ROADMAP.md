@@ -1,4 +1,5 @@
 # Kubectl-watch Roadmap [0.3]
 
 - [ ] Add unittest
-- [ ] Submitting plugins to Krew
+- [x] Support TUI like termshark
+- [ ] Support sharing diff result
