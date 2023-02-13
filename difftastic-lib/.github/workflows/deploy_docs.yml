@@ -1,0 +1,40 @@
+name: Deploy Manual
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - uses: dtolnay/rust-toolchain@1.57.0
+      - run: cargo doc
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: '0.4.18'
+
+      - name: Build manual
+        run: mdbook build
+        working-directory: manual
+
+      - name: Add rustdoc output
+        run: cp -r target/doc manual/book/rustdoc
+
+      - name: Deploy to GitHub pages
+        uses: JamesIves/github-pages-deploy-action@v4.4.0
+        with:
+          branch: gh-pages
+          folder: manual/book
+          single-commit: true
+          force: true
