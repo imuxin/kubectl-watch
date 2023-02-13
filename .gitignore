@@ -1,4 +1,3 @@
-/difftastic-lib
-/target
+**/target
 
 /.vscode

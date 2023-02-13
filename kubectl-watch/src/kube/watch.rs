@@ -34,7 +34,7 @@ pub async fn watch(app: &options::App) -> Result<Receiver<DynamicObject>> {
         }
         let api = discovery::dynamic_api(ar, caps, cli, &app.namespace, app.all);
 
-        // tracing::info!(?resource, name = ?app.name.clone().unwrap_or_default(), "requested objects");
+        tracing::info!(?resource, name = ?app.name.clone().unwrap_or_default(), "requested objects");
 
         let (tx, rx): (Sender<DynamicObject>, Receiver<DynamicObject>) = channel(32);
 
