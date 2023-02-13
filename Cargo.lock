@@ -582,7 +582,7 @@ dependencies = [
 
 [[package]]
 name = "difftastic-lib"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "atty",
  "bumpalo",
@@ -1405,7 +1405,7 @@ dependencies = [
 
 [[package]]
 name = "kubectl-watch"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "clap 3.2.20",
