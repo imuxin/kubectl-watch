@@ -9,7 +9,8 @@ use crate::{
     display::context::all_matched_lines_filled,
     display::hunks::{matched_lines_indexes_for_hunk, Hunk},
     display::style::{
-        self, apply_colors, color_positions, novel_style, split_and_apply, BackgroundColor,
+        self, apply_colors, color_positions, novel_style, split_and_apply, tui_split_and_apply,
+        BackgroundColor,
     },
     lines::{codepoint_len, format_line_num, split_on_newlines, LineNumber},
     mainfn::FgColor,
@@ -58,6 +59,34 @@ fn format_missing_line_num(
         width = column_width - 1
     )
     .style(style)
+    .to_string()
+}
+
+#[allow(unused_variables)]
+fn tui_format_missing_line_num(
+    prev_num: LineNumber,
+    source_dims: &SourceDimensions,
+    is_lhs: bool,
+    use_color: bool,
+) -> String {
+    let column_width = if is_lhs {
+        source_dims.lhs_line_nums_width
+    } else {
+        source_dims.rhs_line_nums_width
+    };
+
+    let after_end = if is_lhs {
+        prev_num >= source_dims.lhs_max_line
+    } else {
+        prev_num >= source_dims.rhs_max_line
+    };
+
+    let num_digits = format!("{}", prev_num.one_indexed()).len();
+    format!(
+        "{:>width$} ",
+        (if after_end { " " } else { "." }).repeat(num_digits),
+        width = column_width - 1
+    )
     .to_string()
 }
 
@@ -159,6 +188,54 @@ fn display_line_nums(
     };
 
     (display_lhs_line_num, display_rhs_line_num)
+}
+
+#[allow(unused_variables)]
+fn tui_display_line_nums(
+    lhs_line_num: Option<LineNumber>,
+    rhs_line_num: Option<LineNumber>,
+    source_dims: &SourceDimensions,
+    use_color: bool,
+    background: BackgroundColor,
+    lhs_has_novel: bool,
+    rhs_has_novel: bool,
+    prev_lhs_line_num: Option<LineNumber>,
+    prev_rhs_line_num: Option<LineNumber>,
+) -> ((String, FgColor), (String, FgColor)) {
+    let mut l_color = FgColor::White;
+    if lhs_has_novel && use_color {
+        // TODO: factor out applying colours to line numbers.
+        l_color = FgColor::Red;
+    }
+    let display_lhs_line_num: String = match lhs_line_num {
+        Some(line_num) => format_line_num_padded(line_num, source_dims.lhs_line_nums_width),
+        None => tui_format_missing_line_num(
+            prev_lhs_line_num.unwrap_or_else(|| 1.into()),
+            source_dims,
+            true,
+            use_color,
+        ),
+    };
+
+    let mut r_color = FgColor::White;
+    if rhs_has_novel && use_color {
+        // TODO: factor out applying colours to line numbers.
+        r_color = FgColor::Green;
+    }
+    let display_rhs_line_num: String = match rhs_line_num {
+        Some(line_num) => format_line_num_padded(line_num, source_dims.rhs_line_nums_width),
+        None => tui_format_missing_line_num(
+            prev_rhs_line_num.unwrap_or_else(|| 1.into()),
+            source_dims,
+            false,
+            use_color,
+        ),
+    };
+
+    (
+        (display_lhs_line_num, l_color),
+        (display_rhs_line_num, r_color),
+    )
 }
 
 // Sizes used when displaying a hunk.
@@ -582,29 +659,171 @@ pub fn tui_print(
     lhs_mps: &[MatchedPos],
     rhs_mps: &[MatchedPos],
 ) -> (Vec<Vec<(String, FgColor)>>, Vec<Vec<(String, FgColor)>>) {
-    (
-        vec![
-            vec![
-                ("1 ".to_string(), FgColor::Red),
-                ("before".to_string(), FgColor::Red),
-            ],
-            vec![
-                ("2 ".to_string(), FgColor::Red),
-                ("key: i am second line".to_string(), FgColor::Red),
-            ],
-        ],
-        vec![
-            vec![
-                ("1 ".to_string(), FgColor::Green),
-                ("after".to_string(), FgColor::Green),
-            ],
-            vec![
-                ("2 ".to_string(), FgColor::Green),
-                ("key: i am second line".to_string(), FgColor::Green),
-            ],
-        ],
-    )
+    let mut l: Vec<Vec<(String, FgColor)>> = vec![];
+    let mut r: Vec<Vec<(String, FgColor)>> = vec![];
+
+    // TODO: this is largely duplicating the `apply_colors` logic.
+    let (lhs_highlights, rhs_highlights) = if display_options.use_color {
+        highlight_positions(
+            display_options.background_color,
+            display_options.syntax_highlight,
+            lhs_mps,
+            rhs_mps,
+        )
+    } else {
+        (FxHashMap::default(), FxHashMap::default())
+    };
+
+    let (lhs_lines_with_novel, rhs_lines_with_novel) = lines_with_novel(lhs_mps, rhs_mps);
+
+    let mut prev_lhs_line_num = None;
+    let mut prev_rhs_line_num = None;
+
+    let lhs_lines = split_on_newlines(lhs_src);
+    let rhs_lines = split_on_newlines(rhs_src);
+    let matched_lines = all_matched_lines_filled(lhs_mps, rhs_mps, &lhs_lines, &rhs_lines);
+    let mut matched_lines_to_print = &matched_lines[..];
+
+    for (i, hunk) in hunks.iter().enumerate() {
+        l.push(vec![(
+            style::header2(
+                lhs_display_path,
+                rhs_display_path,
+                i + 1,
+                hunks.len(),
+                lang_name,
+                display_options,
+            ),
+            FgColor::White,
+        )]);
+        r.push(empty_line());
+
+        let (start_i, end_i) = matched_lines_indexes_for_hunk(matched_lines_to_print, hunk);
+        let aligned_lines = &matched_lines_to_print[start_i..end_i];
+        // We iterate through hunks in order, so we know the next hunk
+        // must appear after start_i. This makes
+        // `matched_lines_indexes_for_hunk` faster on later
+        // iterations, and this function is hot on large textual
+        // diffs.
+        matched_lines_to_print = &matched_lines_to_print[start_i..];
+
+        let no_lhs_changes = hunk.novel_lhs.is_empty();
+        let no_rhs_changes = hunk.novel_rhs.is_empty();
+        let same_lines = aligned_lines.iter().all(|(l, r)| l == r);
+
+        let source_dims = SourceDimensions::new(
+            display_options.display_width,
+            aligned_lines,
+            &lhs_lines,
+            &rhs_lines,
+        );
+        for (lhs_line_num, rhs_line_num) in aligned_lines {
+            let lhs_line_novel = highlight_as_novel(
+                *lhs_line_num,
+                &lhs_lines,
+                *rhs_line_num,
+                &lhs_lines_with_novel,
+            );
+            let rhs_line_novel = highlight_as_novel(
+                *rhs_line_num,
+                &rhs_lines,
+                *lhs_line_num,
+                &rhs_lines_with_novel,
+            );
+
+            let (display_lhs_line_num, display_rhs_line_num) = tui_display_line_nums(
+                *lhs_line_num,
+                *rhs_line_num,
+                &source_dims,
+                display_options.use_color,
+                display_options.background_color,
+                lhs_line_novel,
+                rhs_line_novel,
+                prev_lhs_line_num,
+                prev_rhs_line_num,
+            );
+
+            let mut lhs_line = match lhs_line_num {
+                Some(lhs_line_num) => tui_split_and_apply(
+                    lhs_lines[lhs_line_num.as_usize()],
+                    source_dims.lhs_content_width,
+                    display_options.use_color,
+                    lhs_highlights.get(lhs_line_num).unwrap_or(&vec![]),
+                    Side::Left,
+                ),
+                // None => vec![" ".repeat(source_dims.lhs_content_width)],
+                None => vec![("".to_owned(), FgColor::White)],
+            };
+            lhs_line.insert(0, display_lhs_line_num);
+
+            let mut rhs_line = match rhs_line_num {
+                Some(rhs_line_num) => tui_split_and_apply(
+                    rhs_lines[rhs_line_num.as_usize()],
+                    source_dims.rhs_content_width,
+                    display_options.use_color,
+                    rhs_highlights.get(rhs_line_num).unwrap_or(&vec![]),
+                    Side::Right,
+                ),
+                None => vec![("".to_owned(), FgColor::White)],
+            };
+            rhs_line.insert(0, display_rhs_line_num);
+
+            // paragraph trim: keep both side text len equal
+            let mut l_size: usize = 0;
+            let mut r_size: usize = 0;
+            lhs_line.iter().for_each(|item| l_size += item.0.len());
+            rhs_line.iter().for_each(|item| r_size += item.0.len());
+            if l_size > r_size {
+                rhs_line.push((" ".repeat(l_size - r_size).to_owned(), FgColor::White))
+            } else {
+                lhs_line.push((" ".repeat(r_size - l_size).to_owned(), FgColor::White))
+            }
+
+            l.push(lhs_line);
+            r.push(rhs_line);
+
+            if lhs_line_num.is_some() {
+                prev_lhs_line_num = *lhs_line_num;
+            }
+            if rhs_line_num.is_some() {
+                prev_rhs_line_num = *rhs_line_num;
+            }
+        }
+
+        l.push(empty_line());
+        r.push(empty_line());
+    }
+
+    (l, r)
+
+    // (
+    //     vec![
+    //         vec![
+    //             ("1 ".to_string(), FgColor::Red),
+    //             ("before".to_string(), FgColor::Red),
+    //         ],
+    //         vec![
+    //             ("2 ".to_string(), FgColor::Red),
+    //             ("key: i am second line".to_string(), FgColor::Red),
+    //         ],
+    //     ],
+    //     vec![
+    //         vec![
+    //             ("1 ".to_string(), FgColor::Green),
+    //             ("after".to_string(), FgColor::Green),
+    //         ],
+    //         vec![
+    //             ("2 ".to_string(), FgColor::Green),
+    //             ("key: i am second line".to_string(), FgColor::Green),
+    //         ],
+    //     ],
+    // )
 }
+
+fn empty_line() -> Vec<(String, FgColor)> {
+    vec![("".to_owned(), FgColor::White)]
+}
+
 #[cfg(test)]
 mod tests {
     use crate::parse::syntax::{AtomKind, MatchKind, TokenKind};

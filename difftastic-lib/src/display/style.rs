@@ -3,6 +3,7 @@
 use crate::{
     constants::Side,
     lines::{byte_len, split_on_newlines, LineNumber},
+    mainfn::FgColor,
     options::DisplayOptions,
     parse::syntax::{AtomKind, MatchKind, MatchedPos, TokenKind},
     positions::SingleLineSpan,
@@ -170,6 +171,83 @@ pub fn split_and_apply(
         res.push_str(&" ".repeat(pad));
 
         styled_parts.push(res);
+        part_start += byte_len(part);
+    }
+
+    styled_parts
+}
+
+#[allow(unused_variables)]
+pub fn tui_split_and_apply(
+    line: &str,
+    max_len: usize,
+    use_color: bool,
+    styles: &[(SingleLineSpan, Style)],
+    side: Side,
+) -> Vec<(String, FgColor)> {
+    if styles.is_empty() && !line.trim().is_empty() {
+        // Missing styles is a bug, so highlight in purple to make this obvious.
+        return split_string_by_width(line, max_len, matches!(side, Side::Left))
+            .into_iter()
+            .map(|(part, _)| (part.to_owned(), FgColor::White))
+            .collect();
+    }
+
+    let mut styled_parts: Vec<(String, FgColor)> = vec![];
+    let mut part_start = 0;
+
+    for (part, pad) in split_string_by_width(line, max_len, matches!(side, Side::Left)) {
+        let mut prev_style_end = 0;
+        for (span, style) in styles {
+            let start_col = span.start_col as usize;
+            let end_col = span.end_col as usize;
+
+            // The remaining spans are beyond the end of this part.
+            if start_col >= part_start + byte_len(&part) {
+                break;
+            }
+
+            // If there's an unstyled gap before the next span.
+            if start_col > part_start && prev_style_end < start_col {
+                // Then append that text without styling.
+                let unstyled_start = max(prev_style_end, part_start);
+                let span_s =
+                    substring_by_byte(part, unstyled_start - part_start, start_col - part_start);
+                styled_parts.push((span_s.to_owned(), FgColor::White));
+            }
+
+            // Apply style to the substring in this span.
+            if end_col > part_start {
+                let span_s = substring_by_byte(
+                    part,
+                    max(0, span.start_col as isize - part_start as isize) as usize,
+                    min(byte_len(part), end_col - part_start),
+                );
+                let styled_span_s = span_s.style(*style).to_string();
+
+                let mut color = FgColor::White;
+                if styled_span_s.starts_with("[91m") {
+                    color = FgColor::Red;
+                } else if styled_span_s.starts_with("[92m") {
+                    color = FgColor::Green;
+                }
+                styled_parts.push((span_s.to_owned(), color));
+            }
+            prev_style_end = end_col;
+        }
+
+        // Ensure that prev_style_end is at least at the start of this
+        // part.
+        if prev_style_end < part_start {
+            prev_style_end = part_start;
+        }
+
+        // Unstyled text after the last span.
+        if prev_style_end < part_start + byte_len(part) {
+            let span_s = substring_by_byte(part, prev_style_end - part_start, byte_len(part));
+            styled_parts.push((span_s.to_owned(), FgColor::White));
+        }
+
         part_start += byte_len(part);
     }
 
