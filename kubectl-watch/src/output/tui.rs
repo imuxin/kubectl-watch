@@ -1,7 +1,9 @@
 use crate::diff;
 use crate::options;
-use crate::output;
-use crate::output::event;
+use crate::output::{
+    db::{Database, Memory, UID},
+    event, utils,
+};
 
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture, KeyCode},
@@ -9,8 +11,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use kube::{api::DynamicObject, ResourceExt};
-use std::collections::HashMap;
-use std::io;
+use std::{collections::HashMap, io};
 use tokio::sync::mpsc;
 use tui::{
     backend::{Backend, CrosstermBackend},
@@ -21,11 +22,22 @@ use tui::{
     Frame, Terminal,
 };
 
+impl UID for DynamicObject {
+    fn resource_version(&self) -> String {
+        ResourceExt::resource_version(self).unwrap()
+    }
+    fn uid(&self) -> String {
+        let name = self.name_any();
+        let namespace = self.namespace().unwrap_or_default();
+        name + &namespace
+    }
+}
+
 struct Controller<'a> {
     diff_tool: Box<dyn diff::Diff<'a>>,
     state: TableState,
     items: Vec<DynamicObject>,
-    map: HashMap<String, Vec<DynamicObject>>,
+    database: Memory<DynamicObject>,
     l_diff: Paragraph<'a>,
     r_diff: Paragraph<'a>,
 }
@@ -36,7 +48,7 @@ impl<'a> Controller<'a> {
             diff_tool: diff_tool,
             state: TableState::default(),
             items: vec![],
-            map: HashMap::new(),
+            database: HashMap::new(),
             l_diff: Paragraph::new(""),
             r_diff: Paragraph::new(""),
         }
@@ -49,8 +61,8 @@ impl<'a> Controller<'a> {
                 (pos + 1).to_string(),
                 item.namespace().unwrap_or("".to_owned()),
                 item.name_any().to_owned(),
-                output::format_creation_since(item.creation_timestamp()),
-                item.resource_version().unwrap_or("".to_owned()),
+                utils::format_creation_since(item.creation_timestamp()),
+                ResourceExt::resource_version(item).unwrap_or("".to_owned()),
             ])
         }
         return raws;
@@ -60,48 +72,21 @@ impl<'a> Controller<'a> {
         return vec!["ID", "NAMESPACE", "NAME", "AGE", "REV"];
     }
 
-    fn update(&mut self, obj: DynamicObject) {
-        let empty_list = Vec::<DynamicObject>::new();
-        let name = obj.name_any();
-        let namespace = obj.namespace().unwrap_or_default();
-        let key = name + &namespace;
-        self.map.entry(key.clone()).or_insert(empty_list);
-        if let Some(list) = self.map.get_mut(&key.clone()) {
-            list.push(obj.clone());
-        }
+    fn do_insert(&mut self, obj: DynamicObject) {
+        self.database.do_insert(obj.clone());
         self.items.push(obj)
     }
 
-    fn index(&mut self, select: usize) -> usize {
-        let obj = self.items.get(select).unwrap();
-        let name = obj.name_any();
-        let namespace = obj.namespace().unwrap_or_default();
-        let key = name + &namespace;
-        for (i, item) in self.map.get(&key.clone()).unwrap().iter().enumerate() {
-            if item.resource_version().unwrap() == obj.resource_version().unwrap() {
-                return i;
-            }
-        }
-        0
-    }
-
     fn do_diff(&mut self, select: usize) {
-        let pos = self.index(select);
-        if pos == 0 {
-            // set default diff msg
-            self.l_diff = Paragraph::new(Span::from("no previous item to compare."))
-                .wrap(Wrap { trim: true });
-            self.r_diff = Paragraph::new("");
-            return;
-        }
         let obj = self.items.get(select).unwrap();
-        let name = obj.name_any();
-        let namespace = obj.namespace().unwrap_or_default();
-        let key = name + &namespace;
-        (self.l_diff, self.r_diff) = self.diff_tool.tui_diff(
-            self.map.get(&key.clone()).unwrap().get(pos - 1).unwrap(),
-            obj,
-        )
+        match self.database.sibling(obj) {
+            None => {
+                self.l_diff = Paragraph::new(Span::from("no previous item to compare."))
+                    .wrap(Wrap { trim: true });
+                self.r_diff = Paragraph::new("");
+            }
+            Some(item) => (self.l_diff, self.r_diff) = self.diff_tool.tui_diff(item, obj),
+        }
     }
 
     pub fn next(&mut self) {
@@ -180,7 +165,7 @@ async fn run_tui<B: Backend>(
                     KeyCode::Up | KeyCode::Char('k') => ctrl.previous(),
                     _ => {}
                 },
-                event::Msg::Obj(obj) => ctrl.update(obj),
+                event::Msg::Obj(obj) => ctrl.do_insert(obj),
             }
         }
     }
