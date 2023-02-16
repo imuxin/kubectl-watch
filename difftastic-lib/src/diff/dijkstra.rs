@@ -243,8 +243,8 @@ mod tests {
         diff::changes::ChangeKind,
         diff::graph::Edge::*,
         options::DEFAULT_GRAPH_LIMIT,
-        positions::SingleLineSpan,
         parse::syntax::{init_all_info, AtomKind},
+        positions::SingleLineSpan,
     };
 
     use itertools::Itertools;

@@ -770,24 +770,23 @@ pub fn from_language(language: guess::Language) -> TreeSitterConfig {
                 )
                 .unwrap(),
             }
-        }
-        // Zig => {
-        //     let language = unsafe { tree_sitter_zig() };
-        //     TreeSitterConfig {
-        //         language,
-        //         atom_nodes: vec!["STRINGLITERALSINGLE", "BUILTINIDENTIFIER"]
-        //             .into_iter()
-        //             .collect(),
-        //         delimiter_tokens: (vec![("{", "}"), ("[", "]"), ("(", ")")])
-        //             .into_iter()
-        //             .collect(),
-        //         highlight_query: ts::Query::new(
-        //             language,
-        //             include_str!("../../vendor/highlights/zig.scm"),
-        //         )
-        //         .unwrap(),
-        //     }
-        // }
+        } // Zig => {
+          //     let language = unsafe { tree_sitter_zig() };
+          //     TreeSitterConfig {
+          //         language,
+          //         atom_nodes: vec!["STRINGLITERALSINGLE", "BUILTINIDENTIFIER"]
+          //             .into_iter()
+          //             .collect(),
+          //         delimiter_tokens: (vec![("{", "}"), ("[", "]"), ("(", ")")])
+          //             .into_iter()
+          //             .collect(),
+          //         highlight_query: ts::Query::new(
+          //             language,
+          //             include_str!("../../vendor/highlights/zig.scm"),
+          //         )
+          //         .unwrap(),
+          //     }
+          // }
     }
 }
 
