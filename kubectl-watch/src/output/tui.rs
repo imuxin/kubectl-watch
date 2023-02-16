@@ -78,14 +78,15 @@ impl<'a> Controller<'a> {
     }
 
     fn do_diff(&mut self, select: usize) {
-        let obj = self.items.get(select).unwrap();
-        match self.database.sibling(obj) {
-            None => {
-                self.l_diff = Paragraph::new(Span::from("no previous item to compare."))
-                    .wrap(Wrap { trim: true });
-                self.r_diff = Paragraph::new("");
+        if let Some(obj) = self.items.get(select) {
+            match self.database.sibling(obj) {
+                None => {
+                    self.l_diff = Paragraph::new(Span::from("no previous item to compare."))
+                        .wrap(Wrap { trim: true });
+                    self.r_diff = Paragraph::new("");
+                }
+                Some(item) => (self.l_diff, self.r_diff) = self.diff_tool.tui_diff(item, obj),
             }
-            Some(item) => (self.l_diff, self.r_diff) = self.diff_tool.tui_diff(item, obj),
         }
     }
 
