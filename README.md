@@ -86,7 +86,7 @@ kubectl-watch {resource} -include-managed-fields
 
 ## Acknowledgment
 
-- [delta](https://github.com/dandavison/delta)
+- [tui-rs](https://github.com/fdehau/tui-rs)
 - [difftastic](https://github.com/Wilfred/difftastic)
 - [kube-rs](https://github.com/kube-rs/kube-rs)
 - [rust](https://github.com/rust-lang/rust)

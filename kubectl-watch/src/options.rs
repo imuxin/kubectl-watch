@@ -1,23 +1,11 @@
 #[derive(clap::ArgEnum, Clone, PartialEq, Eq)]
 pub enum Mode {
     TUI,
-    Expand,
     Simple,
 }
 impl Default for Mode {
     fn default() -> Self {
         Self::TUI
-    }
-}
-
-#[derive(clap::ArgEnum, Clone, PartialEq, Eq)]
-pub enum DiffTool {
-    Delta,
-    Difft,
-}
-impl Default for DiffTool {
-    fn default() -> Self {
-        Self::Difft
     }
 }
 
@@ -39,10 +27,6 @@ pub struct App {
     /// delta changes view mode
     #[clap(long, arg_enum, default_value_t)]
     pub mode: Mode,
-
-    /// Diff tool to analyze delta changes
-    #[clap(long, arg_enum, default_value_t)]
-    pub diff_tool: DiffTool,
 
     /// Use tls to request api-server
     #[clap(long)]

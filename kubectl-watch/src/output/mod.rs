@@ -1,7 +1,6 @@
 mod event;
 mod tui;
 
-use crate::diff;
 use crate::options;
 
 use k8s_openapi::{
@@ -9,7 +8,6 @@ use k8s_openapi::{
     chrono::{Duration, Utc},
 };
 use kube::api::{DynamicObject, ResourceExt};
-use std::collections::HashMap;
 use tokio::sync::mpsc::Receiver;
 
 pub async fn simple_print_process(mut rx: Receiver<DynamicObject>) -> std::io::Result<()> {
@@ -17,28 +15,6 @@ pub async fn simple_print_process(mut rx: Receiver<DynamicObject>) -> std::io::R
     while let Some(obj) = rx.recv().await {
         let age = format_creation_since(obj.creation_timestamp());
         println!("{0:<width$} {1:<20}", obj.name_any(), age, width = 63);
-    }
-    Ok(())
-}
-
-pub async fn delta_print_process(
-    app: &options::App,
-    mut rx: Receiver<DynamicObject>,
-) -> std::io::Result<()> {
-    let mut map = HashMap::new();
-    while let Some(obj) = rx.recv().await {
-        let empty_list = Vec::<DynamicObject>::new();
-        let name = obj.name_any();
-        let namespace = obj.namespace().unwrap_or_default();
-        let key = name + &namespace;
-        map.entry(key.clone()).or_insert(empty_list);
-        if let Some(list) = map.get_mut(&key.clone()) {
-            list.push(obj);
-            let exit_code = diff::diff(app, list)?;
-            if exit_code != 0 && exit_code != 1 {
-                std::process::exit(exit_code);
-            }
-        }
     }
     Ok(())
 }
