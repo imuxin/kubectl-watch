@@ -37,6 +37,8 @@ struct Controller<'a> {
     diff_tool: Box<dyn diff::Diff<'a>>,
     state: TableState,
     items: Vec<DynamicObject>,
+    total_items: Vec<DynamicObject>,
+    active_uid: Option<String>,
     database: Memory<DynamicObject>,
     l_diff: Paragraph<'a>,
     r_diff: Paragraph<'a>,
@@ -48,6 +50,8 @@ impl<'a> Controller<'a> {
             diff_tool: diff_tool,
             state: TableState::default(),
             items: vec![],
+            total_items: vec![],
+            active_uid: None,
             database: HashMap::new(),
             l_diff: Paragraph::new(""),
             r_diff: Paragraph::new(""),
@@ -74,7 +78,22 @@ impl<'a> Controller<'a> {
 
     fn do_insert(&mut self, obj: DynamicObject) {
         self.database.do_insert(obj.clone());
-        self.items.push(obj)
+        self.total_items.push(obj);
+        self.refresh_items();
+    }
+
+    fn refresh_items(&mut self) {
+        match &self.active_uid {
+            Some(uid) => {
+                self.items = vec![];
+                self.items
+                    .extend_from_slice(self.database.items_of_uid(uid.clone()).unwrap());
+            }
+            None => {
+                self.items = vec![];
+                self.items.extend_from_slice(&self.total_items);
+            }
+        }
     }
 
     fn do_diff(&mut self, select: usize) {
@@ -118,6 +137,49 @@ impl<'a> Controller<'a> {
         };
         self.do_diff(i);
         self.state.select(Some(i));
+    }
+
+    pub fn enter(&mut self) {
+        match self.state.selected() {
+            Some(i) => {
+                if let Some(obj) = self.items.clone().get(i) {
+                    self.active_uid = Some(UID::uid(obj));
+                    self.refresh_items();
+                    let select = self.database.index_of(obj);
+                    self.do_diff(select);
+                    self.state.select(Some(select));
+                }
+            }
+            None => {}
+        };
+    }
+
+    pub fn escape(&mut self) {
+        match &self.active_uid {
+            None => {}
+            Some(_) => {
+                self.active_uid = None;
+
+                match self.state.selected() {
+                    Some(i) => {
+                        if let Some(obj) = self.items.clone().get(i) {
+                            self.refresh_items();
+                            let mut select: usize = 0;
+                            for (i, item) in self.items.iter().enumerate() {
+                                if ResourceExt::resource_version(item)
+                                    == ResourceExt::resource_version(obj)
+                                {
+                                    select = i;
+                                }
+                            }
+                            self.do_diff(select);
+                            self.state.select(Some(select));
+                        }
+                    }
+                    None => {}
+                };
+            }
+        }
     }
 }
 
@@ -164,6 +226,8 @@ async fn run_tui<B: Backend>(
                     KeyCode::Char('q') => return Ok(()),
                     KeyCode::Down | KeyCode::Char('j') => ctrl.next(),
                     KeyCode::Up | KeyCode::Char('k') => ctrl.previous(),
+                    KeyCode::Enter => ctrl.enter(),
+                    KeyCode::Esc => ctrl.escape(),
                     _ => {}
                 },
                 event::Msg::Obj(obj) => ctrl.do_insert(obj),

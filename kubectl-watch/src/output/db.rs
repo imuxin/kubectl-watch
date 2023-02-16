@@ -10,8 +10,10 @@ pub trait UID {
 
 pub trait Database<T: UID> {
     fn do_insert(&mut self, obj: T);
-    fn sibling(&self, obj: &T) -> Option<&T>;
+    fn items_of(&self, obj: &T) -> Option<&Vec<T>>;
+    fn items_of_uid(&self, uid: String) -> Option<&Vec<T>>;
     fn index_of(&self, obj: &T) -> usize;
+    fn sibling(&self, obj: &T) -> Option<&T>;
 }
 
 impl<T: UID> Database<T> for Memory<T> {
@@ -21,6 +23,14 @@ impl<T: UID> Database<T> for Memory<T> {
         if let Some(list) = self.get_mut(&obj.uid().clone()) {
             list.push(obj);
         }
+    }
+
+    fn items_of(&self, obj: &T) -> Option<&Vec<T>> {
+        self.get(&obj.uid())
+    }
+
+    fn items_of_uid(&self, uid: String) -> Option<&Vec<T>> {
+        self.get(&uid)
     }
 
     fn index_of(&self, obj: &T) -> usize {
