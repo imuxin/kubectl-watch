@@ -1,5 +1,5 @@
-mod event;
 mod db;
+mod event;
 mod tui;
 mod utils;
 
