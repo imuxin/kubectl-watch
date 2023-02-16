@@ -731,7 +731,7 @@ fn compact_gaps(
 mod tests {
     use std::iter::FromIterator;
 
-    use crate::{positions::SingleLineSpan, parse::syntax::TokenKind};
+    use crate::{parse::syntax::TokenKind, positions::SingleLineSpan};
 
     use super::*;
     use pretty_assertions::assert_eq;

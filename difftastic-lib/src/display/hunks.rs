@@ -654,8 +654,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        positions::SingleLineSpan,
         parse::syntax::{MatchKind, TokenKind},
+        positions::SingleLineSpan,
     };
     use pretty_assertions::assert_eq;
 
