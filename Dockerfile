@@ -5,11 +5,10 @@ RUN cargo build --release
 
 FROM debian:buster-slim as cache
 RUN apt update \
-    && apt install -y tini git
+    && apt install -y tini
 
 FROM debian:buster-slim
-RUN apt update && apt install -y libpcre2-8-0 ca-certificates && rm -rf /var/lib/apt/lists/*
-COPY --from=cache /usr/bin/git /usr/bin/git
+RUN apt update && apt install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=cache /usr/bin/tini /usr/bin/tini
 COPY --from=build /kubectl-watch/target/release/kubectl-watch /usr/local/bin/kubectl-watch
 
