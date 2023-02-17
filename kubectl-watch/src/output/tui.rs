@@ -42,6 +42,8 @@ struct Controller<'a> {
     database: Memory<DynamicObject>,
     l_diff: Paragraph<'a>,
     r_diff: Paragraph<'a>,
+    scroll: u16,
+    scroll_step: u16,
 }
 
 impl<'a> Controller<'a> {
@@ -55,6 +57,8 @@ impl<'a> Controller<'a> {
             database: HashMap::new(),
             l_diff: Paragraph::new(""),
             r_diff: Paragraph::new(""),
+            scroll: 0,
+            scroll_step: 5,
         }
     }
 
@@ -184,6 +188,21 @@ impl<'a> Controller<'a> {
             }
         }
     }
+
+    pub fn page_home(&mut self) {
+        self.scroll = 0;
+    }
+
+    pub fn page_up(&mut self) {
+        if self.scroll < self.scroll_step {
+            self.scroll = 0;
+        } else {
+            self.scroll -= self.scroll_step;
+        }
+    }
+    pub fn page_down(&mut self) {
+        self.scroll += self.scroll_step;
+    }
 }
 
 pub async fn main_tui(app: &options::App, chan: mpsc::Receiver<event::Msg>) -> anyhow::Result<()> {
@@ -231,6 +250,9 @@ async fn run_tui<B: Backend>(
                     KeyCode::Up | KeyCode::Char('k') => ctrl.previous(),
                     KeyCode::Enter => ctrl.enter(),
                     KeyCode::Esc => ctrl.escape(),
+                    KeyCode::Home => ctrl.page_home(),
+                    KeyCode::PageUp => ctrl.page_up(),
+                    KeyCode::PageDown => ctrl.page_down(),
                     _ => {}
                 },
                 event::Msg::Obj(obj) => ctrl.do_insert(obj),
@@ -303,6 +325,6 @@ where
         .direction(Direction::Horizontal)
         .split(area);
 
-    f.render_widget(ctrl.l_diff.clone(), chunks[0]);
-    f.render_widget(ctrl.r_diff.clone(), chunks[1]);
+    f.render_widget(ctrl.l_diff.clone().scroll((ctrl.scroll, 0)), chunks[0]);
+    f.render_widget(ctrl.r_diff.clone().scroll((ctrl.scroll, 0)), chunks[1]);
 }
