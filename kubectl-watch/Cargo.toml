@@ -8,7 +8,7 @@ categories = ["development-tools", "visualization"]
 description = "A kubectl plugin to provide a pretty delta change view of being watched kubernetes resources"
 homepage = "https://github.com/imuxin/kubectl-watch"
 repository = "https://github.com/imuxin/kubectl-watch"
-readme = "README.md"
+readme = "../README.md"
 
 [dependencies]
 anyhow = "1.0.44"

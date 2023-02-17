@@ -1,13 +1,8 @@
 # kubectl-watch
 
-[中文](./README-zh.md)
+:tada::tada::tada: Since 0.2.3 we have **terminal UI**.
 
 Another watch tool with visualization view of delta change for kubernetes resources.
-
-|         overview of using delta diff tool          |       overview of using difftastic diff tool       |
-| :------------------------------------------------: | :------------------------------------------------: |
-| ![overview-delta.png](./assets/overview-delta.png) | ![overview-difft.png](./assets/overview-difft.png) |
-
 
 ## Installation
 
@@ -29,7 +24,7 @@ chmod +x /usr/local/bin/kubectl-watch
 cargo install kubectl-watch --locked
 ```
 
-## Cmd Help
+## Command help
 
 ```bash
 USAGE:
@@ -41,16 +36,27 @@ ARGS:
 
 OPTIONS:
     -A, --all                       If present, list the requested object(s) across all namespaces
-        --diff-tool <DIFF_TOOL>     Diff tool to analyze delta changes [default: delta] [possible values: delta, difft]
         --export <EXPORT>           A path, where all watched resources will be strored
     -h, --help                      Print help information
         --include-managed-fields    Set ture to show managed fields delta changes
     -l, --selector <SELECTOR>       Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)
+        --mode <MODE>               delta changes view mode [default: tui] [possible values: tui, simple]
     -n, --namespace <NAMESPACE>     If present, the namespace scope for this CLI request
-    -s, --skip-delta                Skip show delta changes view
         --use-tls                   Use tls to request api-server
     -V, --version                   Print version information
 ```
+
+## TUI keystroke help
+
+| Keystroke                | Description                        |
+| ------------------------ | ---------------------------------- |
+| char "j" or Down Arrow ↓ | go to next  resource               |
+| char "k" or Up Arrow ↑   | go to previous resource            |
+| Enter ↵                  | Only show selected resource events |
+| ESC                      | go back                            |
+| PageUP                   | scroll up diff content             |
+| PageDown                 | scroll down diff content           |
+| Home                     | reset scroll                       |
 
 ## Examples
 
@@ -64,22 +70,12 @@ watch deploy on some namespace
 kubectl-watch deployment -n {namespace}
 ```
 
-watch without delta view, just add `--skip-delta` flag.
-```bash
-kubectl-watch {resource} --delta
-```
-
-watch with delta view by using `difftastic` tool, just add `--diff-tool difft`
-```bash
-kubectl-watch {resource} --diff-tool difft
-```
-
 export watched resources into local storage, just add `--export "/to/your/path"`
 ```bash
 kubectl-watch {resource} --export "/to/your/path"
 ```
 
-`managed-fields` will be default excluded, add `--include-managed-fields` can show the managed fields changes.
+`managed-fields` will be excluded by default, add `--include-managed-fields` can show the managed fields changes.
 ```bash
 kubectl-watch {resource} -include-managed-fields
 ```
