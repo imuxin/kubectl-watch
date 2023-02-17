@@ -4,6 +4,8 @@
 
 Another watch tool with visualization view of delta change for kubernetes resources.
 
+![overview.gif](./assets/overview.gif)
+
 ## Installation
 
 ### Use docker image [recommend]
