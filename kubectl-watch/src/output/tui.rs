@@ -143,6 +143,9 @@ impl<'a> Controller<'a> {
         match self.state.selected() {
             Some(i) => {
                 if let Some(obj) = self.items.clone().get(i) {
+                    if self.active_uid == Some(UID::uid(obj)) {
+                        return;
+                    }
                     self.active_uid = Some(UID::uid(obj));
                     self.refresh_items();
                     let select = self.database.index_of(obj);
