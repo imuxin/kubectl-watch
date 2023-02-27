@@ -80,13 +80,17 @@ impl<'a> Controller<'a> {
         return vec!["ID", "NAMESPACE", "NAME", "AGE", "REV"];
     }
 
-    fn do_insert(&mut self, obj: DynamicObject) {
-        self.database.do_insert(obj.clone());
-        self.total_items.push(obj);
-        self.refresh_items();
+    fn _reset_scroll(&mut self) {
+        self.scroll = 0
     }
 
-    fn refresh_items(&mut self) {
+    fn _do_insert(&mut self, obj: DynamicObject) {
+        self.database.do_insert(obj.clone());
+        self.total_items.push(obj);
+        self._refresh_items();
+    }
+
+    fn _refresh_items(&mut self) {
         match &self.active_uid {
             Some(uid) => {
                 self.items = vec![];
@@ -100,7 +104,7 @@ impl<'a> Controller<'a> {
         }
     }
 
-    fn do_diff(&mut self, select: usize) {
+    fn _do_diff(&mut self, select: usize) {
         if let Some(obj) = self.items.get(select) {
             match self.database.sibling(obj) {
                 None => {
@@ -114,6 +118,7 @@ impl<'a> Controller<'a> {
     }
 
     pub fn next(&mut self) {
+        self._reset_scroll();
         let i = match self.state.selected() {
             Some(i) => {
                 if i >= self.items.len() - 1 {
@@ -124,11 +129,12 @@ impl<'a> Controller<'a> {
             }
             None => 0,
         };
-        self.do_diff(i);
+        self._do_diff(i);
         self.state.select(Some(i));
     }
 
     pub fn previous(&mut self) {
+        self._reset_scroll();
         let i = match self.state.selected() {
             Some(i) => {
                 if i == 0 {
@@ -139,7 +145,7 @@ impl<'a> Controller<'a> {
             }
             None => 0,
         };
-        self.do_diff(i);
+        self._do_diff(i);
         self.state.select(Some(i));
     }
 
@@ -151,9 +157,9 @@ impl<'a> Controller<'a> {
                         return;
                     }
                     self.active_uid = Some(UID::uid(obj));
-                    self.refresh_items();
+                    self._refresh_items();
                     let select = self.database.index_of(obj);
-                    self.do_diff(select);
+                    self._do_diff(select);
                     self.state.select(Some(select));
                 }
             }
@@ -170,7 +176,7 @@ impl<'a> Controller<'a> {
                 match self.state.selected() {
                     Some(i) => {
                         if let Some(obj) = self.items.clone().get(i) {
-                            self.refresh_items();
+                            self._refresh_items();
                             let mut select: usize = 0;
                             for (i, item) in self.items.iter().enumerate() {
                                 if ResourceExt::resource_version(item)
@@ -179,7 +185,7 @@ impl<'a> Controller<'a> {
                                     select = i;
                                 }
                             }
-                            self.do_diff(select);
+                            self._do_diff(select);
                             self.state.select(Some(select));
                         }
                     }
@@ -200,6 +206,7 @@ impl<'a> Controller<'a> {
             self.scroll -= self.scroll_step;
         }
     }
+
     pub fn page_down(&mut self) {
         self.scroll += self.scroll_step;
     }
@@ -255,7 +262,7 @@ async fn run_tui<B: Backend>(
                     KeyCode::PageDown => ctrl.page_down(),
                     _ => {}
                 },
-                event::Msg::Obj(obj) => ctrl.do_insert(obj),
+                event::Msg::Obj(obj) => ctrl._do_insert(obj),
             }
         }
     }
