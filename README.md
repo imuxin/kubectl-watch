@@ -12,10 +12,9 @@ Another watch tool with visualization view of delta change for kubernetes resour
 
 1. Docker should be preinstalled, more installation details please visit [official website](https://docs.docker.com/engine/install/).
 
-2. copy the kubectl-watch script into your $PATH folder
+2. Download kubectl-watch script into your $PATH folder
 ```bash
-cp script/kubectl-watch /usr/local/bin/
-chmod +x /usr/local/bin/kubectl-watch
+curl -SL# "https://github.com/imuxin/kubectl-watch/blob/master/script/kubectl-watch?raw=true" >> /usr/local/bin/kubectl-watch && chmod +x /usr/local/bin/kubectl-watch
 ```
 
 ### Download kubectl-watch from [release assets](https://github.com/imuxin/kubectl-watch/releases).
