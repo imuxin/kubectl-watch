@@ -1,8 +1,10 @@
 fmt:
 	cargo fmt
-debug:
+build:
 	cargo build
-release:
+build-release:
 	cargo build --release
 example:
 	cargo run --example $(example) --release
+fmt-check:
+	cargo fmt --all -- --check
