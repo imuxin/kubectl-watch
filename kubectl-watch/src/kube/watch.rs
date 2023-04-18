@@ -38,7 +38,7 @@ pub async fn watch(app: &options::App) -> Result<Receiver<DynamicObject>> {
 
         let (tx, rx): (Sender<DynamicObject>, Receiver<DynamicObject>) = channel(32);
 
-        let export_path = app.export.clone();
+        let export_path = app.save.clone();
 
         tokio::spawn(async move {
             // present a dumb table for it for now. kubectl does not do this anymore.
