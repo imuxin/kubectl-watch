@@ -1,5 +1,3 @@
-use crate::kube::dynamic_object;
-
 use kube::api::DynamicObject;
 use kube::api::ResourceExt;
 use kube::Resource;
@@ -7,13 +5,7 @@ use std::env::temp_dir;
 use std::fs;
 use std::path::PathBuf;
 
-pub fn tmp_store(
-    l: &dynamic_object::DynamicObject,
-    r: &dynamic_object::DynamicObject,
-) -> (PathBuf, PathBuf) {
-    let l_yaml = serde_yaml::to_string(l).unwrap();
-    let r_yaml = serde_yaml::to_string(r).unwrap();
-
+pub fn tmp_store(l_yaml: String, r_yaml: String) -> (PathBuf, PathBuf) {
     let mut path = temp_dir();
     path.push("kubectl-watch");
     fs::create_dir_all(&path).unwrap();

@@ -59,21 +59,25 @@ impl<'a> Diff<'a> for Difft {
     #[allow(unused_variables)]
     fn tui_diff(
         &mut self,
-        pre: &DynamicObject,
-        next: &DynamicObject,
+        pre: Option<&DynamicObject>,
+        cur: &DynamicObject,
     ) -> (Paragraph<'a>, Paragraph<'a>) {
         let mut p = pipeline::Pipeline::init();
         if !self.include_managed_fields {
             p.add_task(pipeline::exclude_managed_fields);
         }
 
-        let mut l = dynamic_object::DynamicObject::from(pre);
-        let mut r = dynamic_object::DynamicObject::from(next);
-
-        p.process(&mut l, &mut r);
+        let mut r = dynamic_object::DynamicObject::from(cur);
+        let mut l_yaml = String::new();
+        let r_yaml = serde_yaml::to_string(&r).unwrap();
+        if !pre.is_none() {
+            let mut l = dynamic_object::DynamicObject::from(pre.unwrap());
+            l_yaml = serde_yaml::to_string(&l).unwrap();
+            p.process(&mut l, &mut r);
+        }
 
         // init delta args
-        let (minus_file, plus_file) = persistent::tmp_store(&l, &r);
+        let (minus_file, plus_file) = persistent::tmp_store(l_yaml, r_yaml);
 
         let graph_limit = options::DEFAULT_GRAPH_LIMIT;
         let byte_limit = options::DEFAULT_BYTE_LIMIT;

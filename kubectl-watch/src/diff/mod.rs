@@ -12,8 +12,8 @@ pub trait Diff<'a> {
     fn diff(&mut self, minus_file: PathBuf, plus_file: PathBuf) -> std::io::Result<i32>;
     fn tui_diff(
         &mut self,
-        pre: &DynamicObject,
-        next: &DynamicObject,
+        pre: Option<&DynamicObject>,
+        cur: &DynamicObject,
     ) -> (Paragraph<'a>, Paragraph<'a>);
 }
 

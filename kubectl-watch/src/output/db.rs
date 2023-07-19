@@ -34,7 +34,7 @@ impl<T: UID> Database<T> for Memory<T> {
     }
 
     fn index_of(&self, obj: &T) -> usize {
-        for (i, item) in self.get(&obj.uid().clone()).unwrap().iter().enumerate() {
+        for (i, item) in self.get(&obj.uid()).unwrap().iter().enumerate() {
             if item.resource_version() == obj.resource_version() {
                 return i;
             }
