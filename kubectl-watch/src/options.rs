@@ -12,7 +12,7 @@ impl Default for Mode {
 #[derive(clap::Parser)]
 #[clap(version, about, long_about = None)]
 pub struct App {
-    /// Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)
+    /// Selector (label query) to filter on, supports '=', '==', and '!='. (e.g. -l key1=value1,key2=value2)
     #[clap(long, short = 'l')]
     pub selector: Option<String>,
 
@@ -32,11 +32,11 @@ pub struct App {
     #[clap(long)]
     pub use_tls: bool,
 
-    /// Set ture to show managed fields delta changes
+    /// Set true to show managed fields delta changes
     #[clap(long)]
     pub include_managed_fields: bool,
 
-    /// A path, where all watched resources will be strored
+    /// A path, where all watched resources will be stored
     #[clap(long)]
     pub export: Option<String>,
 
