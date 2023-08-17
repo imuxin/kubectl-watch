@@ -1,4 +1,4 @@
-FROM rust:1.63.0-buster as build
+FROM rust:1.71-buster as build
 COPY . /kubectl-watch
 WORKDIR /kubectl-watch
 RUN cargo build --release
