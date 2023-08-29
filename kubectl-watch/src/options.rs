@@ -41,7 +41,7 @@ pub struct App {
     pub export: Option<String>,
 
     /// Support resource 'plural', 'kind' and 'shortname'
-    pub resource: Option<String>,
+    pub resource: String,
     /// Resource name, optional
     pub name: Option<String>,
 }
