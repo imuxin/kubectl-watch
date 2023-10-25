@@ -6,12 +6,12 @@ use crate::persistent;
 
 use difft_lib::{diff_file, options, print_diff_result, tui_diff_result, FgColor};
 use kube::api::DynamicObject;
-use std::path::PathBuf;
-use tui::{
+use ratatui::{
     style::{Color, Style},
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Paragraph, Wrap},
 };
+use std::path::PathBuf;
 
 pub struct Difft {
     include_managed_fields: bool,
@@ -127,7 +127,7 @@ fn to_paragraph<'a>(result: Vec<Vec<(String, FgColor)>>) -> Paragraph<'a> {
                         Span::styled(content.clone(), Style::default().fg(c))
                     })
                     .collect::<Vec<_>>();
-                Spans::from(spans)
+                Line::from(spans)
             })
             .collect::<Vec<_>>(),
     )

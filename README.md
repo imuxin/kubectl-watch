@@ -83,7 +83,7 @@ kubectl-watch {resource} -include-managed-fields
 
 ## Acknowledgment
 
-- [tui-rs](https://github.com/fdehau/tui-rs)
+- [ratatui](https://github.com/ratatui-org/ratatui)
 - [difftastic](https://github.com/Wilfred/difftastic)
 - [kube-rs](https://github.com/kube-rs/kube-rs)
 - [rust](https://github.com/rust-lang/rust)

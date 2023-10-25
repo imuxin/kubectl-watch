@@ -11,9 +11,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use kube::{api::DynamicObject, ResourceExt};
-use std::{collections::HashMap, io};
-use tokio::sync::mpsc;
-use tui::{
+use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
@@ -22,6 +20,8 @@ use tui::{
     Frame,
     Terminal,
 };
+use std::{collections::HashMap, io};
+use tokio::sync::mpsc;
 
 impl UID for DynamicObject {
     fn resource_version(&self) -> String {
@@ -262,7 +262,7 @@ async fn run_tui<B: Backend>(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, ctrl: &mut Controller) {
+fn ui(f: &mut Frame, ctrl: &mut Controller) {
     let chunks = Layout::default()
         .constraints([Constraint::Length(10), Constraint::Min(10)].as_ref())
         .split(f.size());
@@ -271,10 +271,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, ctrl: &mut Controller) {
     draw_diff(f, ctrl, chunks[1]);
 }
 
-fn draw_resources_event<B>(f: &mut Frame<B>, ctrl: &mut Controller, area: Rect)
-where
-    B: Backend,
-{
+fn draw_resources_event(f: &mut Frame, ctrl: &mut Controller, area: Rect) {
     let selected_style = Style::default().bg(Color::Black).fg(Color::LightRed);
     let header = Row::new(ctrl.get_header())
         .style(Style::default().fg(Color::LightBlue))
@@ -311,10 +308,7 @@ where
     f.render_stateful_widget(t, area, &mut ctrl.state);
 }
 
-fn draw_diff<B>(f: &mut Frame<B>, ctrl: &mut Controller, area: Rect)
-where
-    B: Backend,
-{
+fn draw_diff(f: &mut Frame, ctrl: &mut Controller, area: Rect) {
     f.render_widget(
         Block::default().borders(Borders::ALL).title("Diff Result"),
         area,

@@ -1,6 +1,4 @@
 [workspace]
 default-members = ["kubectl-watch"]
-members = [
-  "kubectl-watch",
-  "difftastic-lib",
-]
+members = ["kubectl-watch", "difftastic-lib"]
+resolver = "2"

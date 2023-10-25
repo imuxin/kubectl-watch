@@ -8,7 +8,7 @@ version = "0.0.2"
 authors = ["Wilfred Hughes <me@wilfred.me.uk>", "chengqinglin <chengqinglin@icloud.com>"]
 keywords = ["diff", "syntax"]
 categories = ["development-tools", "command-line-utilities", "parser-implementations"]
-edition = "2018"
+edition = "2021"
 include = [
         "/build.rs",
         "/src/",
@@ -63,7 +63,7 @@ version_check = "0.9.4"
 # flamegraph.
 #
 # https://doc.rust-lang.org/cargo/reference/profiles.html#release
-debug = false
+# debug = false
 
 [[bin]]
 name = "difft"
