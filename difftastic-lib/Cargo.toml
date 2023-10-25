@@ -5,9 +5,16 @@ repository = "https://github.com/imuxin/difftastic-lib"
 homepage = "http://difftastic.wilfred.me.uk/"
 license = "MIT"
 version = "0.0.2"
-authors = ["Wilfred Hughes <me@wilfred.me.uk>", "chengqinglin <chengqinglin@icloud.com>"]
+authors = [
+        "Wilfred Hughes <me@wilfred.me.uk>",
+        "chengqinglin <chengqinglin@icloud.com>",
+]
 keywords = ["diff", "syntax"]
-categories = ["development-tools", "command-line-utilities", "parser-implementations"]
+categories = [
+        "development-tools",
+        "command-line-utilities",
+        "parser-implementations",
+]
 edition = "2021"
 include = [
         "/build.rs",
@@ -56,14 +63,6 @@ pretty_assertions = "1.2.1"
 cc = "1.0.73"
 rayon = "1.5.2"
 version_check = "0.9.4"
-
-[profile.release]
-# Release builds don't have debug symbols by default. We explicitly
-# set this flag so it's easier to toggle when profiling with
-# flamegraph.
-#
-# https://doc.rust-lang.org/cargo/reference/profiles.html#release
-# debug = false
 
 [[bin]]
 name = "difft"

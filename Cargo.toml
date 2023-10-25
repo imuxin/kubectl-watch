@@ -2,3 +2,11 @@
 default-members = ["kubectl-watch"]
 members = ["kubectl-watch", "difftastic-lib"]
 resolver = "2"
+
+[profile.release]
+# Release builds don't have debug symbols by default. We explicitly
+# set this flag so it's easier to toggle when profiling with
+# flamegraph.
+#
+# https://doc.rust-lang.org/cargo/reference/profiles.html#release
+debug = false
